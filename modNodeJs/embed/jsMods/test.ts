@@ -44,6 +44,6 @@ function defaultFunction(testName: string, testFunction: Function) {
 //      const test = require('node:test');
 // or
 //      import test from "node:test";
-//
+
 // @ts-ignore
 module.exports = defaultFunction;
