@@ -17,8 +17,11 @@
 package modNodeJs
 
 import (
+	"encoding/json"
 	"github.com/progpjs/libProgpScripts"
+	"github.com/progpjs/progpAPI"
 	"os"
+	"runtime"
 )
 
 func registerExportedFunctions() {
@@ -27,9 +30,47 @@ func registerExportedFunctions() {
 	group := myMod.UseCustomGroup("nodejsModProcess")
 
 	group.AddFunction("cwd", "JsCwd", JsCwd)
+	group.AddFunction("env", "JsEnv", JsEnv)
+	group.AddFunction("arch", "JsArch", JsArch)
+	group.AddFunction("platform", "JsPlatform", JsPlatform)
+	group.AddFunction("argv", "JsArgV", JsArgV)
+	group.AddFunction("exit", "JsExit", JsExit)
+	group.AddFunction("pid", "JsPID", JsPID)
+	group.AddFunction("ppid", "JsPpID", JsPpID)
 }
 
 func JsCwd() string {
 	cwd, _ := os.Getwd()
 	return cwd
+}
+
+func JsEnv() progpAPI.StringBuffer {
+	res := os.Environ()
+	b, _ := json.Marshal(res)
+	return b
+}
+
+func JsArch() string {
+	// Apple MAC: arm64
+	return runtime.GOARCH
+}
+
+func JsPlatform() string {
+	return runtime.GOOS
+}
+
+func JsArgV() []string {
+	return os.Args
+}
+
+func JsExit(code int) {
+	os.Exit(code)
+}
+
+func JsPID() int {
+	return os.Getpid()
+}
+
+func JsPpID() int {
+	return os.Getppid()
 }
