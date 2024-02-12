@@ -82,3 +82,33 @@ test("NodeJS 'path.format'", () => {
     res = path.format({root: '/', name: 'file', ext: 'txt'});
     assert.strictEqual(res, "/file.txt", "path.format/4");
 });
+
+test("NodeJS 'path.parse'", () => {
+    function toString(obj) {
+        let keys = [];
+        for (let k in obj) keys.push(k);
+        keys = keys.sort();
+
+        let r = "";
+        for (let k of keys) r += "[" + k + ': "' + obj[k] + '"]';
+        return r;
+    }
+
+    let J = (pathToTest, expected) => {
+        let sPathInfos = toString(path.parse(pathToTest));
+        let sExpected = toString(expected);
+
+        //console.log(pathToTest + " --> "+ sPathInfos);
+        assert.strictEqual(sPathInfos, sExpected, "path.parse: " + pathToTest);
+    }
+
+    J("", {"root":"","dir":"","base":"","ext":"","name":""});
+    J("/", {"root":"/","dir":"/","base":"","ext":"","name":""});
+    J("file.ext", {"root":"","dir":"","base":"file.ext","ext":".ext","name":"file"});
+    J("/file.ext", {"root":"/","dir":"/","base":"file.ext","ext":".ext","name":"file"});
+
+    J("a/file.ext", {"root":"","dir":"a","base":"file.ext","ext":".ext","name":"file"});
+
+    J("b/c/file.ext", {"root":"b/","dir":"b/c","base":"file.ext","ext":".ext","name":"file"});
+    J("/d/e/file.ext", {"root":"/","dir":"/d/e","base":"file.ext","ext":".ext","name":"file"});
+});

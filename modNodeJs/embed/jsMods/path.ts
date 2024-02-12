@@ -151,6 +151,37 @@ export function format(pathObject: PathObject) {
     return p;
 }
 
+export function parse(path: string): PathObject {
+    let res: PathObject = {
+        root: "", base: "", dir: "", ext: "", name: ""
+    };
+
+    if (!path) return res;
+
+    let idx = path.lastIndexOf("/");
+    if (idx===-1) {
+        res.dir = "";
+        res.base = path;
+    } else {
+        if (idx===0) res.dir = "/";
+        else res.dir = path.substring(0, idx);
+        res.base = path.substring(idx+1);
+    }
+
+    idx = res.base.lastIndexOf(".");
+    if (idx!==-1) {
+        res.name = res.base.substring(0, idx)
+        res.ext = res.base.substring(idx);
+    }
+
+    if (res.dir) {
+        idx = res.dir.indexOf("/");
+        res.root = res.dir.substring(0, idx+1);
+    }
+
+    return res;
+}
+
 
 export default {
     basename: basename,
@@ -158,6 +189,7 @@ export default {
     extname: extname,
     join: join,
     format: format,
+    parse: parse,
     dirname: dirname,
     sep: sep,
 }
