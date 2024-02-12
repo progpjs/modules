@@ -121,7 +121,50 @@ test("NodeJS 'path.resolve'", () => {
 
     assert.strictEqual(path.resolve('/foo/bar', './baz'), "/foo/bar/baz");
     assert.strictEqual(path.resolve('/foo/bar', '/tmp/file/'), "/tmp/file");
+    assert.strictEqual(path.resolve('/foo/bar', '../tmp/file/'), "/foo/tmp/file");
+    assert.strictEqual(path.resolve('/foo/bar', '../../../tmp/file/'), "/tmp/file");
+    assert.strictEqual(path.resolve('/foo/bar', '.././../tmp/file/'), "/tmp/file");
 
     let expected = path.join(cwd, "wwwroot/static_files/gif/image.gif");
     assert.strictEqual(path.resolve('wwwroot', 'static_files/png/', '../gif/image.gif'), expected);
+});
+
+test("NodeJS 'path.isAbsolute'", () => {
+    assert.strictEqual(path.isAbsolute('/foo/bar'), true);
+    assert.strictEqual(path.isAbsolute('/baz/..'), true);
+    assert.strictEqual(path.isAbsolute('qux/'), false);
+    assert.strictEqual(path.isAbsolute('.'), false);
+    assert.strictEqual(path.isAbsolute('/foo/bar/../../..'), true);
+});
+
+test("NodeJS 'path.relative'", () => {
+    function t(pathFrom, pathTo, expect) {
+        let found = path.relative(pathFrom, pathTo);
+        let title = "From [" + pathFrom + "] to [" + pathTo + "]";
+
+       /* console.log("*-", title)
+        console.log("|- Found:  " + found);
+        console.log("|- Expect: " + expect);
+        console.log("");*/
+
+        assert.strictEqual(found, expect, title);
+    }
+
+    let cwd = process.cwd();
+
+    t("/", "", "Users/johan/github/progpjs/progpjs.dev/__scripts");
+
+    t("", "hello/great/world", "hello/great/world");
+    t("/", "hello/great/world", path.join(cwd, "/hello/great/world").substring(1));
+
+    t("hello/world", "hello/great/world", "../great/world");
+    t("hello/world/", "hello/great/world", "../great/world");
+
+    t("/hello/world", "/hello/great/world", "../great/world");
+    t("/hello/world", "/hello/great/world/", "../great/world");
+
+    t("/hello/world", "/my/great/world", "../../my/great/world");
+    t("/hello/world", "/my/great/world/", "../../my/great/world");
+    t("/hello/world/", "/my/great/world/", "../../my/great/world");
+    t("/hello/world", "hello/great/world", "../../Users/johan/github/progpjs/progpjs.dev/__scripts/hello/great/world");
 });

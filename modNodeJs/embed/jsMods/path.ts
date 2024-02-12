@@ -192,6 +192,7 @@ export function resolve(...paths: string[]) {
     let segments: string[] = [];
     let isRel = true;
     let isFirst = true;
+    let isAbs = false;
 
     for (let p of paths) {
         if (!p) continue;
@@ -205,7 +206,11 @@ export function resolve(...paths: string[]) {
         let parts = p.split("/");
 
         for (let part of parts) {
-            if (!isFirst && !part) continue;
+            if (!part) {
+                if (isFirst) isAbs = true;
+                continue;
+            }
+
             isFirst = false;
 
             if (part==".") {
@@ -213,7 +218,10 @@ export function resolve(...paths: string[]) {
             }
 
             if (part=="..") {
-                if (segments.length!==0) segments.pop();
+                if (segments.length!==0) {
+                    segments.pop();
+                }
+
                 continue;
             }
 
@@ -223,8 +231,61 @@ export function resolve(...paths: string[]) {
 
     let res = segments.join("/");
     if (isRel) res = join(process.cwd(), res);
+    else if (isAbs && (res[0]!="/")) res = "/" + res;
 
     return res;
+}
+
+// https://nodejs.org/api/path.html#pathisabsolutepath
+export function isAbsolute(path: string): boolean {
+    if (!path) return false;
+    return path[0] == "/";
+}
+
+// https://nodejs.org/api/path.html#pathrelativefrom-to
+export function relative(pathFrom: string, pathTo: string): string {
+    if (!pathFrom) return pathTo;
+    if (!pathTo) return process.cwd().substring(1);
+    if (pathFrom==pathTo) return "";
+
+    pathFrom = resolve(pathFrom);
+    pathTo = resolve(pathTo);
+
+    let sFrom = pathFrom.split("/");
+    if (pathFrom=="/") sFrom.pop()
+
+    let sTo = pathTo.split("/");
+
+    //console.log("pathFrom=", pathFrom)
+    //console.log("pathTo=", pathTo)
+
+    // > Search common root
+
+    let idxRoot = 0, max = sFrom.length;
+    if (sTo.length<max) max = sTo.length;
+
+    for (;idxRoot<max;idxRoot++) {
+        if (sFrom[idxRoot]!=sTo[idxRoot]) break;
+    }
+
+    // > Add the "..", going from pathFrom to root
+
+    let count: number;
+    let moving: string[] = [];
+
+    count = sFrom.length - idxRoot;
+    for (let i = 0; i < count; i++) moving.push("..");
+
+    // > Add the remaining parts of pathTo
+
+    count = sTo.length;
+
+    for (let i=idxRoot;i<count;i++) {
+        moving.push(sTo[i]);
+    }
+
+    return moving.join("/")
+
 }
 
 export default {
@@ -234,7 +295,12 @@ export default {
     basename: basename,
     extname: extname,
     join: join,
+    dirname: dirname,
+
     format: format,
     parse: parse,
-    dirname: dirname,
+    toNamespacedPath: toNamespacedPath,
+    resolve: resolve,
+    isAbsolute: isAbsolute,
+    relative: relative,
 }
