@@ -2,7 +2,7 @@ const process = require('node:process');
 const test = require("node:test");
 const assert = require("node:assert");
 
-test("NodeJS 'process.cwd()'", () => {
+test("NodeJS 'process'", () => {
 
     // Supported but commented in order to avoid
     // stopping the current test.

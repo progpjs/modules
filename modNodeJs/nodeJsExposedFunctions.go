@@ -28,21 +28,28 @@ import (
 func registerExportedFunctions() {
 	rg := libProgpScripts.GetFunctionRegistry()
 	myMod := rg.UseGoNamespace("github.com/progpjs/modules/modNodeJs")
-	group := myMod.UseCustomGroup("nodejsModProcess")
 
-	group.AddFunction("kill", "JsKill", JsKill)
-	group.AddFunction("cwd", "JsCwd", JsCwd)
-	group.AddFunction("env", "JsEnv", JsEnv)
-	group.AddFunction("arch", "JsArch", JsArch)
-	group.AddFunction("platform", "JsPlatform", JsPlatform)
-	group.AddFunction("argv", "JsArgV", JsArgV)
-	group.AddFunction("exit", "JsExit", JsExit)
-	group.AddFunction("pid", "JsPID", JsPID)
-	group.AddFunction("ppid", "JsPpID", JsPpID)
-	group.AddFunction("chdir", "JsChDir", JsChDir)
-	group.AddFunction("getuid", "JsGetUid", JsGetUid)
-	group.AddAsyncFunction("nextTick", "JsNextTickAsync", JsNextTickAsync)
+	modProcess := myMod.UseCustomGroup("nodejsModProcess")
+	modProcess.AddFunction("kill", "JsKill", JsKill)
+	modProcess.AddFunction("cwd", "JsCwd", JsCwd)
+	modProcess.AddFunction("env", "JsEnv", JsEnv)
+	modProcess.AddFunction("arch", "JsArch", JsArch)
+	modProcess.AddFunction("platform", "JsPlatform", JsPlatform)
+	modProcess.AddFunction("argv", "JsArgV", JsArgV)
+	modProcess.AddFunction("exit", "JsExit", JsExit)
+	modProcess.AddFunction("pid", "JsPID", JsPID)
+	modProcess.AddFunction("ppid", "JsPpID", JsPpID)
+	modProcess.AddFunction("chdir", "JsChDir", JsChDir)
+	modProcess.AddFunction("getuid", "JsGetUid", JsGetUid)
+	modProcess.AddAsyncFunction("nextTick", "JsNextTickAsync", JsNextTickAsync)
+
+	modOS := myMod.UseCustomGroup("nodejsModOS")
+	modOS.AddFunction("homeDir", "JsHomeDir", JsHomeDir)
+	modOS.AddFunction("hostName", "JsHostName", JsHostName)
+	modOS.AddFunction("tempDir", "JsTempDir", JsTempDir)
 }
+
+//region node:process	(nodejsModProcess)
 
 func JsCwd() string {
 	cwd, _ := os.Getwd()
@@ -107,3 +114,23 @@ func JsKill(pid int, signal int) error {
 
 	return err
 }
+
+//endregion
+
+//region node:os (nodejsModOS)
+
+func JsHomeDir() (string, error) {
+	dirname, err := os.UserHomeDir()
+	return dirname, err
+}
+
+func JsHostName() (string, error) {
+	name, err := os.Hostname()
+	return name, err
+}
+
+func JsTempDir() string {
+	return os.TempDir()
+}
+
+//endregion

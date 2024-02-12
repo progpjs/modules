@@ -23,7 +23,7 @@ import (
 
 func registerExportedFunctions() {
 	rg := libProgpScripts.GetFunctionRegistry()
-	myMod := rg.UseGoNamespace("github.com/progpjs/modCore")
+	myMod := rg.UseGoNamespace("github.com/progpjs/modules/modCore")
 	group := myMod.UseGroupGlobal()
 
 	group.AddAsyncFunction("progpCallAfterMs", "JsProgpCallAfterMsAsync", JsProgpCallAfterMsAsync)
