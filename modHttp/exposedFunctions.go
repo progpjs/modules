@@ -38,7 +38,7 @@ type httpFormFile struct {
 
 func registerExportedFunctions() {
 	rg := libProgpScripts.GetFunctionRegistry()
-	myMod := rg.UseGoNamespace("github.com/progpjs/modHttp")
+	myMod := rg.UseGoNamespace("github.com/progpjs/modules/modHttp")
 	group := myMod.UseCustomGroup("progpjsModHttp")
 
 	group.AddFunction("startServer", "JsStartServer", JsStartServer)

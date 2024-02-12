@@ -1,9 +1,6 @@
 // https://nodejs.org/api/path.html
 
-// https://nodejs.org/api/path.html#pathbasenamepath-suffix
-//
-// @ts-ignore
-const pProto = "".prototype;
+import process from "node:process";
 
 const sep = "/";
 
@@ -151,6 +148,7 @@ export function format(pathObject: PathObject) {
     return p;
 }
 
+// https://nodejs.org/api/path.html#pathparsepath
 export function parse(path: string): PathObject {
     let res: PathObject = {
         root: "", base: "", dir: "", ext: "", name: ""
@@ -182,14 +180,61 @@ export function parse(path: string): PathObject {
     return res;
 }
 
+// https://nodejs.org/api/path.html#pathtonamespacedpathpath
+export function toNamespacedPath(path: string): string {
+    // Is only relevant on windows.
+    // With posix system returns the path as is.
+    return path;
+}
+
+// https://nodejs.org/api/path.html#pathresolvepaths
+export function resolve(...paths: string[]) {
+    let segments: string[] = [];
+    let isRel = true;
+    let isFirst = true;
+
+    for (let p of paths) {
+        if (!p) continue;
+
+        if (p[0]=='/') {
+            segments = [];
+            isRel = false;
+            isFirst = true;
+        }
+
+        let parts = p.split("/");
+
+        for (let part of parts) {
+            if (!isFirst && !part) continue;
+            isFirst = false;
+
+            if (part==".") {
+                continue;
+            }
+
+            if (part=="..") {
+                if (segments.length!==0) segments.pop();
+                continue;
+            }
+
+            segments.push(part);
+        }
+    }
+
+    let res = segments.join("/");
+    if (isRel) res = join(process.cwd(), res);
+
+    return res;
+}
 
 export default {
-    basename: basename,
+    sep: sep,
     delimiter: delimiter,
+
+    basename: basename,
     extname: extname,
     join: join,
     format: format,
     parse: parse,
     dirname: dirname,
-    sep: sep,
 }

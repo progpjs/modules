@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require("node:assert");
 const path = require("node:path");
+const process = require("node:process");
 
 test("NodeJS 'path.others'", () => {
     assert.strictEqual(path.delimiter, ":");
@@ -65,6 +66,8 @@ test("NodeJS 'path.join'", () => {
     assert.strictEqual(path.join("/", "///"), "/");
     assert.strictEqual(path.join("/", "//a"), "/a");
     assert.strictEqual(path.join("/", "//", "a"), "/a");
+
+    assert.strictEqual(path.join("/base/path", "next/part"), "/base/path/next/part");
 });
 
 test("NodeJS 'path.format'", () => {
@@ -111,4 +114,14 @@ test("NodeJS 'path.parse'", () => {
 
     J("b/c/file.ext", {"root":"b/","dir":"b/c","base":"file.ext","ext":".ext","name":"file"});
     J("/d/e/file.ext", {"root":"/","dir":"/d/e","base":"file.ext","ext":".ext","name":"file"});
+});
+
+test("NodeJS 'path.resolve'", () => {
+    let cwd = process.cwd();
+
+    assert.strictEqual(path.resolve('/foo/bar', './baz'), "/foo/bar/baz");
+    assert.strictEqual(path.resolve('/foo/bar', '/tmp/file/'), "/tmp/file");
+
+    let expected = path.join(cwd, "wwwroot/static_files/gif/image.gif");
+    assert.strictEqual(path.resolve('wwwroot', 'static_files/png/', '../gif/image.gif'), expected);
 });
