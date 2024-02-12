@@ -5,6 +5,8 @@
 // @ts-ignore
 const pProto = "".prototype;
 
+const sep = "/";
+
 export function basename(path: any, suffix?: string): string {
     if (!path) return "";
 
@@ -47,14 +49,6 @@ export function extname(path: string) {
     if (idx==0) return "";
 
     return path.substring(idx);
-}
-
-interface PathObject {
-    dir?: string;
-    root?: string;
-    base?: string;
-    name?: string;
-    ext?: string;
 }
 
 // https://nodejs.org/api/path.html#pathjoinpaths
@@ -121,12 +115,42 @@ export function join(...paths: string[]) {
     return res;
 }
 
+interface PathObject {
+    dir?: string;
+    root?: string;
+    base?: string;
+    name?: string;
+    ext?: string;
+}
 
 // https://nodejs.org/api/path.html#pathformatpathobject
 //
 export function format(pathObject: PathObject) {
+    let p = "";
 
+    if (pathObject.base) {
+        p += pathObject.base;
+    } else {
+        if (pathObject.name) p += pathObject.name;
+
+        if (pathObject.ext) {
+            if (pathObject.ext[0]!=".") p += "."
+            p += pathObject.ext;
+        }
+    }
+
+    if (pathObject.dir) {
+        p = join(pathObject.dir, p)
+    } else if (pathObject.root) {
+        // root is for windows, it's for exemple "c:\" or "d:\".
+        // Here windows isn't supported but the behaviors is.
+        //
+        p = join(pathObject.root, p)
+    }
+
+    return p;
 }
+
 
 export default {
     basename: basename,
@@ -134,5 +158,6 @@ export default {
     extname: extname,
     join: join,
     format: format,
-    dirname: dirname
+    dirname: dirname,
+    sep: sep,
 }

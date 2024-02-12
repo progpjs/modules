@@ -33,5 +33,11 @@ func registerEmbeddedModule(innerPath string, alias ...string) {
 }
 
 func InstallModule() {
+	registerEmbeddedModule("jsMods/assert.ts", "assert", "node:assert")
+	registerEmbeddedModule("jsMods/fs.ts", "fs", "node:fs")
+	registerEmbeddedModule("jsMods/os.ts", "os", "node:os")
 	registerEmbeddedModule("jsMods/path.ts", "path", "node:path")
+	registerEmbeddedModule("jsMods/process.ts", "process", "node:process")
+	registerEmbeddedModule("jsMods/stream.ts", "stream", "node:stream")
+	registerEmbeddedModule("jsMods/test.ts", "test", "node:test")
 }

@@ -1,7 +1,6 @@
 const test = require('node:test');
-const assert = require("assert");
-
-const path = require("path");
+const assert = require("node:assert");
+const path = require("node:path");
 
 test("NodeJS 'path.others'", () => {
     assert.strictEqual(path.delimiter, ":");
@@ -69,5 +68,17 @@ test("NodeJS 'path.join'", () => {
 });
 
 test("NodeJS 'path.format'", () => {
-    // A faire après join.
+    let res;
+
+    res = path.format({root: '/ignored', dir: '/home/user/dir', base: 'file.txt'});
+    assert.strictEqual(res, "/home/user/dir/file.txt", "path.format/2");
+
+    res = path.format({root: '/', base: 'file.txt', ext: 'ignored'});
+    assert.strictEqual(res, "/file.txt", "path.format/2");
+
+    res = path.format({root: '/', name: 'file', ext: '.txt'});
+    assert.strictEqual(res, "/file.txt","path.format/3");
+
+    res = path.format({root: '/', name: 'file', ext: 'txt'});
+    assert.strictEqual(res, "/file.txt", "path.format/4");
 });
