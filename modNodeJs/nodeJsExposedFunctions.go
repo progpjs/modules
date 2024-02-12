@@ -22,6 +22,7 @@ import (
 	"github.com/progpjs/progpAPI"
 	"os"
 	"runtime"
+	"syscall"
 )
 
 func registerExportedFunctions() {
@@ -29,6 +30,7 @@ func registerExportedFunctions() {
 	myMod := rg.UseGoNamespace("github.com/progpjs/modules/modNodeJs")
 	group := myMod.UseCustomGroup("nodejsModProcess")
 
+	group.AddFunction("kill", "JsKill", JsKill)
 	group.AddFunction("cwd", "JsCwd", JsCwd)
 	group.AddFunction("env", "JsEnv", JsEnv)
 	group.AddFunction("arch", "JsArch", JsArch)
@@ -37,6 +39,9 @@ func registerExportedFunctions() {
 	group.AddFunction("exit", "JsExit", JsExit)
 	group.AddFunction("pid", "JsPID", JsPID)
 	group.AddFunction("ppid", "JsPpID", JsPpID)
+	group.AddFunction("chdir", "JsChDir", JsChDir)
+	group.AddFunction("getuid", "JsGetUid", JsGetUid)
+	group.AddAsyncFunction("nextTick", "JsNextTickAsync", JsNextTickAsync)
 }
 
 func JsCwd() string {
@@ -73,4 +78,32 @@ func JsPID() int {
 
 func JsPpID() int {
 	return os.Getppid()
+}
+
+func JsChDir(dir string) error {
+	return os.Chdir(dir)
+}
+
+func JsGetUid() int {
+	return os.Getuid()
+}
+
+func JsNextTickAsync(fct progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		fct.CallWithUndefined()
+	})
+}
+
+func JsKill(pid int, signal int) error {
+	err := syscall.Kill(pid, syscall.Signal(signal))
+
+	if signal == 0 {
+		// Don't throw error fi signal is 0
+		// which allows testing if process exists.
+		// It's a node.js special case.
+		//
+		return nil
+	}
+
+	return err
 }
