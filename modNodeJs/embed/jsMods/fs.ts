@@ -26,28 +26,28 @@
         [e] fs.truncateSync(path[, len])
 
         [e] fs.copyFileSync(src, dest[, mode])
-        [x] fs.linkSync(existingPath, newPath)              --> need buffer
+        [x] fs.linkSync(existingPath, newPath)                      --> need buffer
         [x] fs.symlinkSync(target, path[, type])
         [x] fs.unlinkSync(path)
 
-        [ ] fs.mkdirSync(path[, options])
-        [ ] fs.mkdtempSync(prefix[, options])
-        [ ] fs.renameSync(oldPath, newPath)
-        [ ] fs.rmdirSync(path[, options])
-        [ ] fs.rmSync(path[, options])
+        [x] fs.mkdirSync(path[, options])
+        [x] fs.mkdtempSync(prefix[, options])
+        [x] fs.renameSync(oldPath, newPath)
+        [x] fs.rmdirSync(path[, options])
+        [x] fs.rmSync(path[, options])
 
-        [x] fs.readFileSync(path[, options])                --> need buffer
-        [ ] fs.appendFileSync(path, data[, options])        --> need buffer
+        [x] fs.readFileSync(path[, options])                        --> need buffer
+        [ ] fs.appendFileSync(path, data[, options])                --> need buffer
 
-        [ ] fs.readlinkSync(path[, options])
-        [ ] fs.realpathSync(path[, options])
+        [ ] fs.readlinkSync(path[, options])                        --> need buffer
+        [ ] fs.realpathSync(path[, options])                        --> need buffer
 
-        [ ] fs.openSync(path[, flags[, mode]])
-        [ ] fs.closeSync(fd)
-        [ ] fs.opendirSync(path[, options])
-        [ ] fs.readSync(fd, buffer, offset, length[, position])
-        [ ] fs.writeFileSync(file, data[, options])
-        [ ] fs.writeSync(fd, buffer, offset[, length[, position]])
+        [ ] fs.openSync(path[, flags[, mode]])                      --> need buffer
+        [ ] fs.closeSync(fd)                                        --> need buffer
+        [ ] fs.opendirSync(path[, options])                         --> need buffer
+        [ ] fs.readSync(fd, buffer, offset, length[, position])     --> need buffer
+        [ ] fs.writeFileSync(file, data[, options])                 --> need buffer
+        [ ] fs.writeSync(fd, buffer, offset[, length[, position]])  --> need buffer
  */
 
 interface ModFS {
@@ -63,6 +63,10 @@ interface ModFS {
     linkSync(existingPath: string, newPath: string): void
     symlinkSync(existingPath: string, newPath: string): void
     unlinkSync(filePath: string): void
+    mkdirSync(dirPath: string, recursive: boolean, flag: number): void
+    mkdtempSync(dirPath: string, prefix: string): string
+    renameSync(oldPath: string, newPath: string): void
+    rmSync(dirPath: string, recursive: boolean, force: boolean): void
 }
 
 const modFS = progpGetModule<ModFS>("nodejsModFS")!;
@@ -75,6 +79,8 @@ export const copyFileSync = modFS.copyFileSync;
 export const linkSync = modFS.linkSync;
 export const symlinkSync = modFS.symlinkSync;
 export const unlinkSync = modFS.unlinkSync;
+export const mkdtempSync = modFS.mkdtempSync;
+export const renameSync = modFS.renameSync;
 
 interface StatSyncOptions {
     throwIfNoEntry?: boolean
@@ -102,11 +108,51 @@ export function readlinkSync(path: string, options?: ReadFileOptions): string{
     }
 }
 
+export function mkdirSync(dirPath: string, options?: MkDirSyncOptions) {
+    let recursive = false;
+    let flag = 0o777;
+
+    if (options) {
+        if (options.recursive!==undefined) recursive = !!options.recursive
+
+        if (options.mode!==undefined) {
+            if (typeof(options.mode)=="string") {
+                flag = fsOctalStringToInt(options.mode)
+            }
+        }
+    }
+
+    modFS.mkdirSync(dirPath, recursive, flag);
+}
+
+export function rmSync(dirPath: string, options?: RmSyncOptions) {
+    let recursive = false, force = false;
+
+    if (options) {
+        if (options.recursive!==undefined) recursive = !!options.recursive
+        if (options.force!==undefined) force = !!options.force
+    }
+
+    modFS.rmSync(dirPath, recursive, force);
+}
+
+export const rmdirSync = rmSync;
+
 //region Const & Interfaces
 
 interface ReadFileOptions {
     encoding?: string|null
     flag?: string
+}
+
+interface MkDirSyncOptions {
+    recursive?: boolean
+    mode?: string|number
+}
+
+interface RmSyncOptions {
+    recursive?: boolean
+    force?: boolean
 }
 
 export const constants = {
@@ -171,6 +217,14 @@ export const constants = {
 
 //endregion
 
+//region Tools functions
+
+function fsOctalStringToInt(mode: string): number {
+    return parseInt(mode, 8);
+}
+
+//endregion
+
 export default {
     existsSync: existsSync,
     statSync: statSync,
@@ -182,6 +236,10 @@ export default {
     linkSync: linkSync,
     symlinkSync: symlinkSync,
     unlinkSync: unlinkSync,
+    mkdtempSync: mkdtempSync,
+    renameSync: renameSync,
+    rmSync: rmSync,
+    rmdirSync: rmdirSync,
 
     constants: constants,
 }

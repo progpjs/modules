@@ -23,6 +23,7 @@ import (
 	"github.com/progpjs/progpAPI"
 	"io"
 	"os"
+	"path"
 	"runtime"
 	"syscall"
 	"time"
@@ -68,15 +69,19 @@ func registerExportedFunctions() {
 	modFS.AddFunction("existsSync", "JsFsExistsSync", JsFsExistsSync)
 	modFS.AddFunction("statSync", "JsFsStatSync", JsFsStatSync)
 	modFS.AddFunction("accessSync", "JsFsAccessSync", JsFsAccessSync)
-	modFS.AddFunction("chmodSync", "JsChmodSync", JsChmodSync)
-	modFS.AddFunction("chownSync", "JsChownSync", JsChownSync)
-	modFS.AddFunction("truncateSync", "JsTruncateSync", JsTruncateSync)
-	modFS.AddFunction("readFileUtf8Sync", "JsReadFileUtf8Sync", JsReadFileUtf8Sync)
-	modFS.AddFunction("readFileBytesSync", "JsReadFileBytesSync", JsReadFileBytesSync)
-	modFS.AddFunction("copyFileSync", "JsCopyFileSync", JsCopyFileSync)
-	modFS.AddFunction("linkSync", "JsLinkSync", JsLinkSync)
-	modFS.AddFunction("symlinkSync", "JsSymLinkSync", JsSymLinkSync)
-	modFS.AddFunction("unlinkSync", "JsUnlink", JsUnlink)
+	modFS.AddFunction("chmodSync", "JsFsChmodSync", JsFsChmodSync)
+	modFS.AddFunction("chownSync", "JsFsChownSync", JsFsChownSync)
+	modFS.AddFunction("truncateSync", "JsFsTruncateSync", JsFsTruncateSync)
+	modFS.AddFunction("readFileUtf8Sync", "JsFsReadFileUtf8Sync", JsFsReadFileUtf8Sync)
+	modFS.AddFunction("readFileBytesSync", "JsFsReadFileBytesSync", JsFsReadFileBytesSync)
+	modFS.AddFunction("copyFileSync", "JsFsCopyFileSync", JsFsCopyFileSync)
+	modFS.AddFunction("linkSync", "JsFsLinkSync", JsFsLinkSync)
+	modFS.AddFunction("symlinkSync", "JsFsSymLinkSync", JsFsSymLinkSync)
+	modFS.AddFunction("unlinkSync", "JsFsUnlink", JsFsUnlink)
+	modFS.AddFunction("mkdirSync", "JsFsMkdirSync", JsFsMkdirSync)
+	modFS.AddFunction("mkdtempSync", "JsFsMkdtempSync", JsFsMkdtempSync)
+	modFS.AddFunction("renameSync", "JsFsRenameSync", JsFsRenameSync)
+	modFS.AddFunction("rmSync", "JSFsRmSync", JSFsRmSync)
 
 	//endregion
 
@@ -366,21 +371,21 @@ func JsFsAccessSync(path string, mode int) error {
 	return nil
 }
 
-func JsChmodSync(path string, mode uint32) error {
+func JsFsChmodSync(path string, mode uint32) error {
 	return os.Chmod(path, os.FileMode(mode))
 }
 
-func JsChownSync(path string, uid int, gid int) error {
+func JsFsChownSync(path string, uid int, gid int) error {
 	return os.Chown(path, uid, gid)
 }
 
-func JsTruncateSync(path string, length int64) error {
+func JsFsTruncateSync(path string, length int64) error {
 	fd, err := os.OpenFile(path, os.O_WRONLY, 0222)
 	if err != nil {
 		return err
 	}
 
-	defer fd.Close()
+	defer func() { _ = fd.Close() }()
 
 	err = fd.Truncate(length)
 	if err != nil {
@@ -394,17 +399,17 @@ func JsTruncateSync(path string, length int64) error {
 
 }
 
-func JsReadFileUtf8Sync(path string) (progpAPI.StringBuffer, error) {
+func JsFsReadFileUtf8Sync(path string) (progpAPI.StringBuffer, error) {
 	bytes, err := os.ReadFile(path)
 	return bytes, err
 }
 
-func JsReadFileBytesSync(path string) ([]byte, error) {
+func JsFsReadFileBytesSync(path string) ([]byte, error) {
 	bytes, err := os.ReadFile(path)
 	return bytes, err
 }
 
-func JsCopyFileSync(sourcePath, destPath string) error {
+func JsFsCopyFileSync(sourcePath, destPath string) error {
 	sourceFileStat, err := os.Stat(sourcePath)
 	if err != nil {
 		return err
@@ -418,28 +423,64 @@ func JsCopyFileSync(sourcePath, destPath string) error {
 	if err != nil {
 		return err
 	}
-	defer source.Close()
+	defer func() { _ = source.Close() }()
 
 	destination, err := os.Create(destPath)
 	if err != nil {
 		return err
 	}
-	defer destination.Close()
+	defer func() { _ = destination.Close() }()
 
 	_, err = io.Copy(destination, source)
 	return err
 }
 
-func JsLinkSync(existingPath, newPath string) error {
+func JsFsLinkSync(existingPath, newPath string) error {
 	return os.Link(existingPath, newPath)
 }
 
-func JsSymLinkSync(existingPath, newPath string) error {
+func JsFsSymLinkSync(existingPath, newPath string) error {
 	return os.Symlink(existingPath, newPath)
 }
 
-func JsUnlink(filePath string) error {
+func JsFsUnlink(filePath string) error {
 	return os.Remove(filePath)
+}
+
+func JsFsMkdirSync(dirPath string, recursive bool, flag uint32) error {
+	flag = 0777
+
+	if recursive {
+		return os.MkdirAll(dirPath, os.FileMode(flag))
+	} else {
+		return os.Mkdir(dirPath, os.FileMode(flag))
+	}
+}
+
+func JsFsMkdtempSync(prefix string) (string, error) {
+	dirPath := path.Dir(prefix)
+	prefix = path.Base(prefix)
+	return os.MkdirTemp(dirPath, prefix)
+}
+
+func JsFsRenameSync(oldPath, newPath string) error {
+	return os.Rename(oldPath, newPath)
+}
+
+func JSFsRmSync(dirPath string, recursive bool, force bool) error {
+	var err error
+
+	if recursive {
+		err = os.RemoveAll(dirPath)
+	} else {
+		err = os.Remove(dirPath)
+	}
+
+	if force {
+		return nil
+	}
+
+	return err
 }
 
 //endregion
