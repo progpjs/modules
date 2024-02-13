@@ -48,7 +48,13 @@ class Buffer extends Uint8Array {
     }
 }
 
-export function alloc(size: number): Buffer {
+export function alloc(size: number, fill?: any): Buffer {
+    let b = new Buffer(size);
+    b.fill(fill);
+    return b;
+}
+
+export function allocUnsafe(size: number): Buffer {
     return new Buffer(size);
 }
 

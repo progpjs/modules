@@ -14,131 +14,60 @@
  * limitations under the License.
  */
 
-// https://nodejs.org/api/fs.html
-
-/*
-    [e] Sync API
-        [x] fs.existsSync(path)
-        [x] fs.statSync(path[, options])
-        [x] fs.accessSync(path[, mode])
-        [x] fs.chmodSync(path, mode)
-        [x] fs.chownSync(path, uid, gid)
-        [e] fs.truncateSync(path[, len])
-
-        [e] fs.copyFileSync(src, dest[, mode])
-        [x] fs.linkSync(existingPath, newPath)                      --> need buffer
-        [x] fs.symlinkSync(target, path[, type])
-        [x] fs.unlinkSync(path)
-
-        [x] fs.mkdirSync(path[, options])
-        [x] fs.mkdtempSync(prefix[, options])
-        [x] fs.renameSync(oldPath, newPath)
-        [x] fs.rmdirSync(path[, options])
-        [x] fs.rmSync(path[, options])
-
-        [x] fs.readFileSync(path[, options])                        --> need buffer
-        [ ] fs.appendFileSync(path, data[, options])                --> need buffer
-
-        [ ] fs.readlinkSync(path[, options])                        --> need buffer
-        [ ] fs.realpathSync(path[, options])                        --> need buffer
-
-        [ ] fs.openSync(path[, flags[, mode]])                      --> need buffer
-        [ ] fs.closeSync(fd)                                        --> need buffer
-        [ ] fs.opendirSync(path[, options])                         --> need buffer
-        [ ] fs.readSync(fd, buffer, offset, length[, position])     --> need buffer
-        [ ] fs.writeFileSync(file, data[, options])                 --> need buffer
-        [ ] fs.writeSync(fd, buffer, offset[, length[, position]])  --> need buffer
- */
-
 interface ModFS {
     existsSync(path: string): boolean
+    existsASync(path: string, callback: Function): void
+
     statSync(path: string, throwErrorIfMissing: boolean): any
+    statAsync(path: string, throwErrorIfMissing: boolean, callback: Function): void
+
     accessSync(path: string, mode: number): any
+    accessAsync(path: string, mode: number, callback: Function): void
+
     chmodSync(path: string, mode: number): void
+    chmodAsync(path: string, mode: number, callback: Function ): void
+
     chownSync(path: string, uid: number, gid: number): void
+    chownAsync(path: string, uid: number, gid: number, callback: Function): void
+
     truncateSync(path: string, length: number): void
+    truncateAsync(path: string, length: number, callback: Function): void
+
+    copyFileSync(fromPath: string, toPath: string): void
+    copyFileAsync(fromPath: string, toPath: string, callback: Function): void
+
+    linkSync(existingPath: string, newPath: string): void
+    linkAsync(existingPath: string, newPath: string, callback: Function): void
+
+    symlinkSync(existingPath: string, newPath: string): void
+    symlinkAsync(existingPath: string, newPath: string, callback: Function): void
+
+    unlinkSync(filePath: string): void
+    unlinkAsync(filePath: string, callback: Function): void
+
+    mkdirSync(dirPath: string, recursive: boolean, flag: number): void
+    mkdirAsync(dirPath: string, recursive: boolean, flag: number, callback: Function): void
+
+    mkdtempSync(dirPath: string, prefix: string): string
+    mkdtempAsync(dirPath: string, prefix: string, callback: Function): void
+
     readFileUtf8Sync(path: string): string
     readFileBytesSync(path: string): ArrayBuffer
-    copyFileSync(fromPath: string, toPath: string): void
-    linkSync(existingPath: string, newPath: string): void
-    symlinkSync(existingPath: string, newPath: string): void
-    unlinkSync(filePath: string): void
-    mkdirSync(dirPath: string, recursive: boolean, flag: number): void
-    mkdtempSync(dirPath: string, prefix: string): string
     renameSync(oldPath: string, newPath: string): void
     rmSync(dirPath: string, recursive: boolean, force: boolean): void
+    appendFileSyncText(filePath: string, data: string, mode: number, flag: number): void
+    appendFileSyncBuffer(filePath: string, data: ArrayBuffer, mode: number, flag: number): void
+    readlinkSync(filePath: string): string;
+    realpath(filePath: string): string;
 }
 
 const modFS = progpGetModule<ModFS>("nodejsModFS")!;
 
-export const existsSync = modFS.existsSync;
-export const chmodSync = modFS.chmodSync;
-export const chownSync = modFS.chownSync;
-export const truncateSync = modFS.truncateSync;
-export const copyFileSync = modFS.copyFileSync;
-export const linkSync = modFS.linkSync;
-export const symlinkSync = modFS.symlinkSync;
-export const unlinkSync = modFS.unlinkSync;
-export const mkdtempSync = modFS.mkdtempSync;
-export const renameSync = modFS.renameSync;
+//region Const & Interfaces
 
 interface StatSyncOptions {
     throwIfNoEntry?: boolean
 }
-
-export function statSync(path: string, options: StatSyncOptions): any {
-    let throwIfNoEntry = true;
-    if (options && !options.throwIfNoEntry) throwIfNoEntry = false;
-    return modFS.statSync(path, throwIfNoEntry)
-}
-
-export function readlinkSync(path: string, options?: ReadFileOptions): string{
-    let encoding = "";
-
-    if (options) {
-        if (options.encoding) encoding = options.encoding;
-    }
-
-    if (encoding=="utf8") {
-        return modFS.readFileUtf8Sync(path);
-    } else {
-        let bytes = modFS.readFileBytesSync(path);
-        // TODO: must create a buffer
-        throw "not implemented yet"
-    }
-}
-
-export function mkdirSync(dirPath: string, options?: MkDirSyncOptions) {
-    let recursive = false;
-    let flag = 0o777;
-
-    if (options) {
-        if (options.recursive!==undefined) recursive = !!options.recursive
-
-        if (options.mode!==undefined) {
-            if (typeof(options.mode)=="string") {
-                flag = fsOctalStringToInt(options.mode)
-            }
-        }
-    }
-
-    modFS.mkdirSync(dirPath, recursive, flag);
-}
-
-export function rmSync(dirPath: string, options?: RmSyncOptions) {
-    let recursive = false, force = false;
-
-    if (options) {
-        if (options.recursive!==undefined) recursive = !!options.recursive
-        if (options.force!==undefined) force = !!options.force
-    }
-
-    modFS.rmSync(dirPath, recursive, force);
-}
-
-export const rmdirSync = rmSync;
-
-//region Const & Interfaces
 
 interface ReadFileOptions {
     encoding?: string|null
@@ -225,13 +154,231 @@ function fsOctalStringToInt(mode: string): number {
 
 //endregion
 
+//region Sync API
+
+//region Supported Sync API
+
+// https://nodejs.org/api/fs.html
+
+// [x] fs.existsSync(path)
+// [x] fs.statSync(path[, options])
+// [x] fs.accessSync(path[, mode])
+// [x] fs.chmodSync(path, mode)
+// [x] fs.chownSync(path, uid, gid)
+// [x] fs.truncateSync(path[, len])
+
+// [e] fs.copyFileSync(src, dest[, mode])
+// [x] fs.linkSync(existingPath, newPath)
+// [x] fs.symlinkSync(target, path[, type])
+// [x] fs.unlinkSync(path)
+
+// [x] fs.mkdirSync(path[, options])
+// [x] fs.mkdtempSync(prefix[, options])
+// [x] fs.renameSync(oldPath, newPath)
+// [x] fs.rmdirSync(path[, options])
+// [x] fs.rmSync(path[, options])
+
+// [x] fs.readFileSync(path[, options])
+// [x] fs.appendFileSync(path, data[, options])
+
+// [x] fs.readlinkSync(path[, options])
+// [x] fs.realpathSync(path[, options])
+
+// [ ] fs.openSync(path[, flags[, mode]])
+// [ ] fs.closeSync(fd)
+// [ ] fs.opendirSync(path[, options])
+// [ ] fs.readSync(fd, buffer, offset, length[, position])
+// [ ] fs.writeFileSync(file, data[, options])
+// [ ] fs.writeSync(fd, buffer, offset[, length[, position]])
+
+//endregion
+
+export const existsSync = modFS.existsSync;
+export const chmodSync = modFS.chmodSync;
+export const chownSync = modFS.chownSync;
+export const truncateSync = modFS.truncateSync;
+export const copyFileSync = modFS.copyFileSync;
+export const linkSync = modFS.linkSync;
+export const symlinkSync = modFS.symlinkSync;
+export const unlinkSync = modFS.unlinkSync;
+export const mkdtempSync = modFS.mkdtempSync;
+export const renameSync = modFS.renameSync;
+export const readlinkSync = modFS.readlinkSync;
+export const realpath = modFS.realpath;
+export const rmdirSync = rmSync;
+
+export function accessSync(path: string, mode: number) {
+    if (mode===undefined) mode = constants.F_OK;
+    return modFS.accessSync(path, mode);
+}
+
+export function statSync(path: string, options: StatSyncOptions): any {
+    let throwIfNoEntry = true;
+    if (options && !options.throwIfNoEntry) throwIfNoEntry = false;
+    return modFS.statSync(path, throwIfNoEntry)
+}
+
+export function readFileSync(path: string, options?: ReadFileOptions): string{
+    let encoding = "";
+
+    if (options) {
+        if (options.encoding) encoding = options.encoding;
+    }
+
+    if (encoding=="utf8") {
+        return modFS.readFileUtf8Sync(path);
+    } else {
+        let bytes = modFS.readFileBytesSync(path);
+        // TODO: must create a buffer
+        throw "not implemented yet"
+    }
+}
+
+export function mkdirSync(dirPath: string, options?: MkDirSyncOptions) {
+    let recursive = false;
+    let flag = 0o777;
+
+    if (options) {
+        if (options.recursive!==undefined) recursive = !!options.recursive
+
+        if (options.mode!==undefined) {
+            if (typeof(options.mode)=="string") {
+                flag = fsOctalStringToInt(options.mode)
+            }
+        }
+    }
+
+    modFS.mkdirSync(dirPath, recursive, flag);
+}
+
+export function rmSync(dirPath: string, options?: RmSyncOptions) {
+    let recursive = false, force = false;
+
+    if (options) {
+        if (options.recursive!==undefined) recursive = !!options.recursive
+        if (options.force!==undefined) force = !!options.force
+    }
+
+    modFS.rmSync(dirPath, recursive, force);
+}
+
+export function appendFileSync(filePath: string, data: string|Buffer, mode: number, flag: string|number) {
+    if (mode===undefined) mode = 0o666;
+    if (flag===undefined) flag = "a";
+
+    let nFlag: number;
+    if (typeof(flag) == "string") nFlag  = fsOctalStringToInt(flag);
+    else nFlag = <number>flag;
+
+    if (data instanceof Buffer) modFS.appendFileSyncBuffer(filePath, data, mode, nFlag);
+    else modFS.appendFileSyncText(filePath, <string>data, mode, nFlag);
+}
+
+//endregion
+
+//region Async API
+
+//region Supported Async API
+// https://nodejs.org/api/fs.html
+// [x] fs.exists
+// [x] fs.stat
+// [x] fs.access
+// [x] fs.chmod
+// [x] fs.chown
+// [x] fs.truncate
+// [x] fs.copyFile
+// [x] fs.link
+// [x] fs.symlink
+// [x] fs.unlink
+// [x] fs.mkdir
+// [ ] fs.mkdtemp
+// [ ] fs.rename
+// [ ] fs.rmdir
+// [ ] fs.rmS
+// [ ] fs.readFile
+// [ ] fs.appendFile
+// [ ] fs.readlink
+// [ ] fs.realpath
+
+// >>>> Not sync impl
+//
+// [ ] fs.open
+// [ ] fs.close
+// [ ] fs.opendir
+// [ ] fs.read
+// [ ] fs.writeFile
+// [ ] fs.write
+//endregion
+
+export function exists(path: string, callback: Function) {
+    modFS.existsASync(path, callback);
+}
+
+export function stat(path: string, options: StatSyncOptions|Function|undefined, callback: Function): any {
+    if (options instanceof Function) {
+        callback = options;
+        options = undefined;
+    }
+
+    let throwIfNoEntry = true;
+    if (options && !options.throwIfNoEntry) throwIfNoEntry = false;
+
+    modFS.statAsync(path, throwIfNoEntry, callback);
+}
+
+export function access(path: string, mode: number|Function, callback: Function) {
+    if (mode instanceof Function) {
+        callback = mode;
+        mode = constants.F_OK;
+    }
+
+    return modFS.accessAsync(path, mode, callback);
+}
+
+export function mkdir(dirPath: string, options: MkDirSyncOptions|undefined, callback?: Function) {
+    if (options instanceof Function) {
+        callback = options;
+        options = undefined;
+    }
+
+    let recursive = false;
+    let flag = 0o777;
+
+    if (options) {
+        if (options.recursive!==undefined) recursive = !!options.recursive
+
+        if (options.mode!==undefined) {
+            if (typeof(options.mode)=="string") {
+                flag = fsOctalStringToInt(options.mode)
+            }
+        }
+    }
+
+    modFS.mkdirAsync(dirPath, recursive, flag, callback!);
+}
+
+export const chmod = modFS.chmodAsync
+export const chown = modFS.chownAsync
+export const truncate = modFS.truncateAsync;
+export const copyFile = modFS.copyFileAsync;
+export const link = modFS.linkSync;
+export const symlink = modFS.symlinkAsync;
+export const unlink = modFS.unlinkAsync;
+export const mkdtemp = modFS.mkdtempAsync;
+
+//endregion
+
 export default {
+    constants: constants,
+
+    //region Sync API
+
     existsSync: existsSync,
     statSync: statSync,
     chmodSync: chmodSync,
     chownSync: chownSync,
     truncateSync: truncateSync,
-    readlinkSync: readlinkSync,
+    readFileSync: readFileSync,
     copyFileSync: copyFileSync,
     linkSync: linkSync,
     symlinkSync: symlinkSync,
@@ -240,6 +387,22 @@ export default {
     renameSync: renameSync,
     rmSync: rmSync,
     rmdirSync: rmdirSync,
+    appendFileSync: appendFileSync,
+    readlinkSync: readlinkSync,
+    realpath: realpath,
 
-    constants: constants,
+    //endregion
+
+    exists: exists,
+    stat: stat,
+    access: access,
+    chmod: chmod,
+    chown: chown,
+    truncate: truncate,
+    copyFile: copyFile,
+    link: link,
+    symlink: symlink,
+    unlink: unlink,
+    mkdir: mkdir,
+    mkdtemp: mkdtemp,
 }

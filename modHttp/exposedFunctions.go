@@ -140,7 +140,7 @@ func JsVerbWithFunction(resHost *progpAPI.SharedResource, verb string, requestPa
 		defer res.Dispose()
 
 		mutex.Lock()
-		callback.CallWithResource(res)
+		callback.CallWithResource2(res)
 		mutex.Lock()
 
 		if !call.IsBodySend() {
@@ -361,7 +361,7 @@ func JsRequestReadFormFileAsync(resHttpRequest *progpAPI.SharedResource, fieldNa
 		return
 	}
 
-	callback.CallWithArrayBuffer(buffer.Bytes())
+	callback.CallWithArrayBuffer2(buffer.Bytes())
 }
 
 func JsRequestWildcards(resHttpRequest *progpAPI.SharedResource) (error, []string) {

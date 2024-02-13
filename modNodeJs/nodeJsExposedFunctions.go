@@ -64,26 +64,50 @@ func registerExportedFunctions() {
 
 	modFS := myMod.UseCustomGroup("nodejsModFS")
 
-	//region Sync
-
 	modFS.AddFunction("existsSync", "JsFsExistsSync", JsFsExistsSync)
+	modFS.AddAsyncFunction("existsASync", "JsFsExistsASync", JsFsExistsASync)
+
 	modFS.AddFunction("statSync", "JsFsStatSync", JsFsStatSync)
+	modFS.AddAsyncFunction("statAsync", "JsFsStatAsync", JsFsStatAsync)
+
 	modFS.AddFunction("accessSync", "JsFsAccessSync", JsFsAccessSync)
+	modFS.AddAsyncFunction("accessAsync", "JsFsAccessAsync", JsFsAccessAsync)
+
 	modFS.AddFunction("chmodSync", "JsFsChmodSync", JsFsChmodSync)
+	modFS.AddAsyncFunction("chmodAsync", "JsFsChmodAsync", JsFsChmodAsync)
+
 	modFS.AddFunction("chownSync", "JsFsChownSync", JsFsChownSync)
+	modFS.AddAsyncFunction("chownAsync", "JsFsChownSync", JsFsChownAsync)
+
 	modFS.AddFunction("truncateSync", "JsFsTruncateSync", JsFsTruncateSync)
+	modFS.AddAsyncFunction("truncateAsync", "JsFsTruncateAsync", JsFsTruncateAsync)
+
+	modFS.AddFunction("copyFileSync", "JsFsCopyFileSync", JsFsCopyFileSync)
+	modFS.AddAsyncFunction("copyFileAsync", "JsFsCopyFileAsync", JsFsCopyFileAsync)
+
+	modFS.AddFunction("linkSync", "JsFsLinkSync", JsFsLinkSync)
+	modFS.AddAsyncFunction("linkAsync", "JsFsLinkAsync", JsFsLinkAsync)
+
+	modFS.AddFunction("symlinkSync", "JsFsSymLinkSync", JsFsSymLinkSync)
+	modFS.AddAsyncFunction("symlinkAsync", "JsFsSymLinkAsync", JsFsSymLinkAsync)
+
+	modFS.AddFunction("unlinkSync", "JsFsUnlinkSync", JsFsUnlinkSync)
+	modFS.AddAsyncFunction("unlinkAsync", "JsFsUnlinkSync", JsFsUnlinkAsync)
+
+	modFS.AddFunction("mkdirSync", "JsFsMkdirSync", JsFsMkdirSync)
+	modFS.AddAsyncFunction("mkdirAsync", "JsFsMkdirAsync", JsFsMkdirAsync)
+
+	modFS.AddFunction("mkdtempSync", "JsFsMkdtempSync", JsFsMkdtempSync)
+	modFS.AddAsyncFunction("mkdtempAsync", "JsFsMkdtempAsync", JsFsMkdtempAsync)
+
 	modFS.AddFunction("readFileUtf8Sync", "JsFsReadFileUtf8Sync", JsFsReadFileUtf8Sync)
 	modFS.AddFunction("readFileBytesSync", "JsFsReadFileBytesSync", JsFsReadFileBytesSync)
-	modFS.AddFunction("copyFileSync", "JsFsCopyFileSync", JsFsCopyFileSync)
-	modFS.AddFunction("linkSync", "JsFsLinkSync", JsFsLinkSync)
-	modFS.AddFunction("symlinkSync", "JsFsSymLinkSync", JsFsSymLinkSync)
-	modFS.AddFunction("unlinkSync", "JsFsUnlink", JsFsUnlink)
-	modFS.AddFunction("mkdirSync", "JsFsMkdirSync", JsFsMkdirSync)
-	modFS.AddFunction("mkdtempSync", "JsFsMkdtempSync", JsFsMkdtempSync)
 	modFS.AddFunction("renameSync", "JsFsRenameSync", JsFsRenameSync)
-	modFS.AddFunction("rmSync", "JSFsRmSync", JSFsRmSync)
-
-	//endregion
+	modFS.AddFunction("rmSync", "JsFsRmSync", JsFsRmSync)
+	modFS.AddFunction("appendFileSyncText", "JsFsAppendFileTexSync", JsFsAppendFileTexSync)
+	modFS.AddFunction("appendFileSyncBytes", "JsFsAppendFileBytesSync", JsFsAppendFileBytesSync)
+	modFS.AddFunction("readlinkSync", "JsFsReadlinkSync", JsFsReadlinkSync)
+	modFS.AddFunction("realpath", "JsFsRealpathSync", JsFsRealpathSync)
 
 	//endregion
 }
@@ -277,6 +301,34 @@ func JsFsExistsSync(path string) bool {
 	return true
 }
 
+func JsFsExistsASync(path string, callback progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			callback.CallWithBool2(false)
+		} else {
+			callback.CallWithBool2(true)
+		}
+	})
+}
+
+func JsFsStatAsync(path string, throwErrorIfMissing bool, callback progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		stat, err := JsFsStatSync(path, throwErrorIfMissing)
+
+		if err != nil {
+			callback.CallWithError(err)
+			return
+		} else {
+			b, err := json.Marshal(stat)
+			if err != nil {
+				callback.CallWithError(err)
+			} else {
+				callback.CallWithStringBuffer2(b)
+			}
+		}
+	})
+}
+
 func JsFsStatSync(path string, throwErrorIfMissing bool) (*FsFileState, error) {
 	info, err := os.Stat(path)
 
@@ -319,6 +371,18 @@ func JsFsStatSync(path string, throwErrorIfMissing bool) (*FsFileState, error) {
 	}
 
 	return stat, nil
+}
+
+func JsFsAccessAsync(path string, mode int, callback progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		err := JsFsAccessSync(path, mode)
+
+		if err == nil {
+			callback.CallWithUndefined()
+		} else {
+			callback.CallWithError(err)
+		}
+	})
 }
 
 func JsFsAccessSync(path string, mode int) error {
@@ -371,12 +435,48 @@ func JsFsAccessSync(path string, mode int) error {
 	return nil
 }
 
+func JsFsChmodAsync(path string, mode uint32, callback progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		err := JsFsChmodSync(path, mode)
+
+		if err == nil {
+			callback.CallWithUndefined()
+		} else {
+			callback.CallWithError(err)
+		}
+	})
+}
+
 func JsFsChmodSync(path string, mode uint32) error {
 	return os.Chmod(path, os.FileMode(mode))
 }
 
+func JsFsChownAsync(path string, uid int, gid int, callback progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		err := JsFsChownSync(path, uid, gid)
+
+		if err == nil {
+			callback.CallWithUndefined()
+		} else {
+			callback.CallWithError(err)
+		}
+	})
+}
+
 func JsFsChownSync(path string, uid int, gid int) error {
 	return os.Chown(path, uid, gid)
+}
+
+func JsFsTruncateAsync(path string, length int64, callback progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		err := JsFsTruncateSync(path, length)
+
+		if err == nil {
+			callback.CallWithUndefined()
+		} else {
+			callback.CallWithError(err)
+		}
+	})
 }
 
 func JsFsTruncateSync(path string, length int64) error {
@@ -396,7 +496,6 @@ func JsFsTruncateSync(path string, length int64) error {
 
 	err = fd.Sync()
 	return err
-
 }
 
 func JsFsReadFileUtf8Sync(path string) (progpAPI.StringBuffer, error) {
@@ -407,6 +506,18 @@ func JsFsReadFileUtf8Sync(path string) (progpAPI.StringBuffer, error) {
 func JsFsReadFileBytesSync(path string) ([]byte, error) {
 	bytes, err := os.ReadFile(path)
 	return bytes, err
+}
+
+func JsFsCopyFileAsync(sourcePath, destPath string, callback progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		err := JsFsCopyFileSync(sourcePath, destPath)
+
+		if err == nil {
+			callback.CallWithUndefined()
+		} else {
+			callback.CallWithError(err)
+		}
+	})
 }
 
 func JsFsCopyFileSync(sourcePath, destPath string) error {
@@ -435,16 +546,64 @@ func JsFsCopyFileSync(sourcePath, destPath string) error {
 	return err
 }
 
+func JsFsLinkAsync(existingPath, newPath string, callback progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		err := JsFsLinkSync(existingPath, newPath)
+
+		if err == nil {
+			callback.CallWithUndefined()
+		} else {
+			callback.CallWithError(err)
+		}
+	})
+}
+
 func JsFsLinkSync(existingPath, newPath string) error {
 	return os.Link(existingPath, newPath)
+}
+
+func JsFsSymLinkAsync(existingPath, newPath string, callback progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		err := JsFsSymLinkSync(existingPath, newPath)
+
+		if err == nil {
+			callback.CallWithUndefined()
+		} else {
+			callback.CallWithError(err)
+		}
+	})
 }
 
 func JsFsSymLinkSync(existingPath, newPath string) error {
 	return os.Symlink(existingPath, newPath)
 }
 
-func JsFsUnlink(filePath string) error {
+func JsFsUnlinkAsync(filePath string, callback progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		err := JsFsUnlinkSync(filePath)
+
+		if err == nil {
+			callback.CallWithUndefined()
+		} else {
+			callback.CallWithError(err)
+		}
+	})
+}
+
+func JsFsUnlinkSync(filePath string) error {
 	return os.Remove(filePath)
+}
+
+func JsFsMkdirAsync(dirPath string, recursive bool, flag uint32, callback progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		err := JsFsMkdirSync(dirPath, recursive, flag)
+
+		if err == nil {
+			callback.CallWithUndefined()
+		} else {
+			callback.CallWithError(err)
+		}
+	})
 }
 
 func JsFsMkdirSync(dirPath string, recursive bool, flag uint32) error {
@@ -457,6 +616,18 @@ func JsFsMkdirSync(dirPath string, recursive bool, flag uint32) error {
 	}
 }
 
+func JsFsMkdtempAsync(prefix string, callback progpAPI.ScriptFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		res, err := JsFsMkdtempSync(prefix)
+
+		if err == nil {
+			callback.CallWithString2(res)
+		} else {
+			callback.CallWithError(err)
+		}
+	})
+}
+
 func JsFsMkdtempSync(prefix string) (string, error) {
 	dirPath := path.Dir(prefix)
 	prefix = path.Base(prefix)
@@ -467,7 +638,7 @@ func JsFsRenameSync(oldPath, newPath string) error {
 	return os.Rename(oldPath, newPath)
 }
 
-func JSFsRmSync(dirPath string, recursive bool, force bool) error {
+func JsFsRmSync(dirPath string, recursive bool, force bool) error {
 	var err error
 
 	if recursive {
@@ -481,6 +652,59 @@ func JSFsRmSync(dirPath string, recursive bool, force bool) error {
 	}
 
 	return err
+}
+
+func JsFsAppendFileTexSync(filePath string, data string, mode uint32, flag int) error {
+	fs, err := os.OpenFile(filePath, flag, os.FileMode(mode))
+	if err != nil {
+		return err
+	}
+
+	defer func() { _ = fs.Close() }()
+	_, err = fs.WriteString(data)
+
+	return err
+}
+
+func JsFsAppendFileBytesSync(filePath string, data []byte, mode uint32, flag int) error {
+	fs, err := os.OpenFile(filePath, flag, os.FileMode(mode))
+	if err != nil {
+		return err
+	}
+
+	defer func() { _ = fs.Close() }()
+	_, err = fs.Write(data)
+
+	return err
+}
+
+func JsFsReadlinkSync(filePath string) (string, error) {
+	return os.Readlink(filePath)
+}
+
+func JsFsRealpathSync(filePath string) (string, error) {
+	filePath = path.Clean(filePath)
+
+	if path.IsAbs(filePath) {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return "", err
+		}
+
+		filePath = path.Join(filePath, cwd)
+	}
+
+	// os.Lstat resolve symlinks
+	stat, err := os.Stat(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	if stat.Mode()&os.ModeSymlink == os.ModeSymlink {
+		return os.Readlink(filePath)
+	} else {
+		return filePath, nil
+	}
 }
 
 //endregion
