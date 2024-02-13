@@ -21,6 +21,7 @@ import (
 	"errors"
 	"github.com/progpjs/libProgpScripts"
 	"github.com/progpjs/progpAPI"
+	"io"
 	"os"
 	"runtime"
 	"syscall"
@@ -67,6 +68,15 @@ func registerExportedFunctions() {
 	modFS.AddFunction("existsSync", "JsFsExistsSync", JsFsExistsSync)
 	modFS.AddFunction("statSync", "JsFsStatSync", JsFsStatSync)
 	modFS.AddFunction("accessSync", "JsFsAccessSync", JsFsAccessSync)
+	modFS.AddFunction("chmodSync", "JsChmodSync", JsChmodSync)
+	modFS.AddFunction("chownSync", "JsChownSync", JsChownSync)
+	modFS.AddFunction("truncateSync", "JsTruncateSync", JsTruncateSync)
+	modFS.AddFunction("readFileUtf8Sync", "JsReadFileUtf8Sync", JsReadFileUtf8Sync)
+	modFS.AddFunction("readFileBytesSync", "JsReadFileBytesSync", JsReadFileBytesSync)
+	modFS.AddFunction("copyFileSync", "JsCopyFileSync", JsCopyFileSync)
+	modFS.AddFunction("linkSync", "JsLinkSync", JsLinkSync)
+	modFS.AddFunction("symlinkSync", "JsSymLinkSync", JsSymLinkSync)
+	modFS.AddFunction("unlinkSync", "JsUnlink", JsUnlink)
 
 	//endregion
 
@@ -318,6 +328,7 @@ func JsFsAccessSync(path string, mode int) error {
 	perm := info.Mode().Perm()
 
 	// 0444  =>  4: user can read, 4: group can read, 4: others can read
+	// 0444  =>  can read
 	// 0555	 =>  can read & execute
 	// 0666	 =>  can read & write
 	// 0777	 =>  can read & write & execute
@@ -353,6 +364,82 @@ func JsFsAccessSync(path string, mode int) error {
 	}
 
 	return nil
+}
+
+func JsChmodSync(path string, mode uint32) error {
+	return os.Chmod(path, os.FileMode(mode))
+}
+
+func JsChownSync(path string, uid int, gid int) error {
+	return os.Chown(path, uid, gid)
+}
+
+func JsTruncateSync(path string, length int64) error {
+	fd, err := os.OpenFile(path, os.O_WRONLY, 0222)
+	if err != nil {
+		return err
+	}
+
+	defer fd.Close()
+
+	err = fd.Truncate(length)
+	if err != nil {
+		return err
+	}
+
+	// fd.Seek(0,0)
+
+	err = fd.Sync()
+	return err
+
+}
+
+func JsReadFileUtf8Sync(path string) (progpAPI.StringBuffer, error) {
+	bytes, err := os.ReadFile(path)
+	return bytes, err
+}
+
+func JsReadFileBytesSync(path string) ([]byte, error) {
+	bytes, err := os.ReadFile(path)
+	return bytes, err
+}
+
+func JsCopyFileSync(sourcePath, destPath string) error {
+	sourceFileStat, err := os.Stat(sourcePath)
+	if err != nil {
+		return err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return errors.New("can't copy file")
+	}
+
+	source, err := os.Open(sourcePath)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+
+	destination, err := os.Create(destPath)
+	if err != nil {
+		return err
+	}
+	defer destination.Close()
+
+	_, err = io.Copy(destination, source)
+	return err
+}
+
+func JsLinkSync(existingPath, newPath string) error {
+	return os.Link(existingPath, newPath)
+}
+
+func JsSymLinkSync(existingPath, newPath string) error {
+	return os.Symlink(existingPath, newPath)
+}
+
+func JsUnlink(filePath string) error {
+	return os.Remove(filePath)
 }
 
 //endregion

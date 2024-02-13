@@ -16,24 +16,97 @@
 
 // https://nodejs.org/api/fs.html
 
+/*
+    [e] Sync API
+        [x] fs.existsSync(path)
+        [x] fs.statSync(path[, options])
+        [x] fs.accessSync(path[, mode])
+        [x] fs.chmodSync(path, mode)
+        [x] fs.chownSync(path, uid, gid)
+        [e] fs.truncateSync(path[, len])
+
+        [e] fs.copyFileSync(src, dest[, mode])
+        [x] fs.linkSync(existingPath, newPath)              --> need buffer
+        [x] fs.symlinkSync(target, path[, type])
+        [x] fs.unlinkSync(path)
+
+        [ ] fs.mkdirSync(path[, options])
+        [ ] fs.mkdtempSync(prefix[, options])
+        [ ] fs.renameSync(oldPath, newPath)
+        [ ] fs.rmdirSync(path[, options])
+        [ ] fs.rmSync(path[, options])
+
+        [x] fs.readFileSync(path[, options])                --> need buffer
+        [ ] fs.appendFileSync(path, data[, options])        --> need buffer
+
+        [ ] fs.readlinkSync(path[, options])
+        [ ] fs.realpathSync(path[, options])
+
+        [ ] fs.openSync(path[, flags[, mode]])
+        [ ] fs.closeSync(fd)
+        [ ] fs.opendirSync(path[, options])
+        [ ] fs.readSync(fd, buffer, offset, length[, position])
+        [ ] fs.writeFileSync(file, data[, options])
+        [ ] fs.writeSync(fd, buffer, offset[, length[, position]])
+ */
+
 interface ModFS {
     existsSync(path: string): boolean
     statSync(path: string, throwErrorIfMissing: boolean): any
     accessSync(path: string, mode: number): any
+    chmodSync(path: string, mode: number): void
+    chownSync(path: string, uid: number, gid: number): void
+    truncateSync(path: string, length: number): void
+    readFileUtf8Sync(path: string): string
+    readFileBytesSync(path: string): ArrayBuffer
+    copyFileSync(fromPath: string, toPath: string): void
+    linkSync(existingPath: string, newPath: string): void
+    symlinkSync(existingPath: string, newPath: string): void
+    unlinkSync(filePath: string): void
 }
 
 const modFS = progpGetModule<ModFS>("nodejsModFS")!;
 
 export const existsSync = modFS.existsSync;
+export const chmodSync = modFS.chmodSync;
+export const chownSync = modFS.chownSync;
+export const truncateSync = modFS.truncateSync;
+export const copyFileSync = modFS.copyFileSync;
+export const linkSync = modFS.linkSync;
+export const symlinkSync = modFS.symlinkSync;
+export const unlinkSync = modFS.unlinkSync;
 
 interface StatSyncOptions {
     throwIfNoEntry?: boolean
 }
 
-export const statSync = function(path: string, options: StatSyncOptions): any {
+export function statSync(path: string, options: StatSyncOptions): any {
     let throwIfNoEntry = true;
     if (options && !options.throwIfNoEntry) throwIfNoEntry = false;
     return modFS.statSync(path, throwIfNoEntry)
+}
+
+export function readlinkSync(path: string, options?: ReadFileOptions): string{
+    let encoding = "";
+
+    if (options) {
+        if (options.encoding) encoding = options.encoding;
+    }
+
+    if (encoding=="utf8") {
+        return modFS.readFileUtf8Sync(path);
+    } else {
+        let bytes = modFS.readFileBytesSync(path);
+        // TODO: must create a buffer
+        throw "not implemented yet"
+    }
+}
+
+//region Const & Interfaces
+
+interface ReadFileOptions {
+    encoding?: string|null
+    flag?: string
 }
 
 export const constants = {
@@ -96,8 +169,19 @@ export const constants = {
     COPYFILE_FICLONE_FORCE: 4
 }
 
+//endregion
+
 export default {
     existsSync: existsSync,
     statSync: statSync,
+    chmodSync: chmodSync,
+    chownSync: chownSync,
+    truncateSync: truncateSync,
+    readlinkSync: readlinkSync,
+    copyFileSync: copyFileSync,
+    linkSync: linkSync,
+    symlinkSync: symlinkSync,
+    unlinkSync: unlinkSync,
+
     constants: constants,
 }
