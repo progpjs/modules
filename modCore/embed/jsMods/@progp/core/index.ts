@@ -33,6 +33,9 @@ declare global {
     function progpDontRemove(e: any): void; // Declared in this js script.
 
     function progpCallAfterMs(timeInMs: number, callback: Function): void;
+
+    function progpStringToBuffer(text: string): ArrayBuffer;
+    function progpBufferToString(b: ArrayBuffer): string;
 }
 
 //region Web Standard libraries
@@ -124,6 +127,13 @@ globalThis.console.info = function(...data: any[]) {
 }
 
 //endregion
+
+//endregion
+
+//region NodeJS buffer
+
+const nodeJsBuffer = require("node:buffer");
+globalThis.Buffer = nodeJsBuffer;
 
 //endregion
 

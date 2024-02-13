@@ -43,4 +43,7 @@ func InstallModule() {
 	registerEmbeddedModule("jsMods/path.ts", "path", "node:path")
 	registerEmbeddedModule("jsMods/process.ts", "process", "node:process")
 	registerEmbeddedModule("jsMods/stream.ts", "stream", "node:stream")
+	registerEmbeddedModule("jsMods/buffer.ts", "buffer", "node:buffer")
+	registerEmbeddedModule("jsMods/timers.ts", "timers", "node:timers")
+	registerEmbeddedModule("jsMods/url.ts", "url", "node:url")
 }
