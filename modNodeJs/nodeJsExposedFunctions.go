@@ -65,7 +65,7 @@ func registerExportedFunctions() {
 	modFS := myMod.UseCustomGroup("nodejsModFS")
 
 	modFS.AddFunction("existsSync", "JsFsExistsSync", JsFsExistsSync)
-	modFS.AddAsyncFunction("existsASync", "JsFsExistsASync", JsFsExistsASync)
+	modFS.AddAsyncFunction("existsASync", "JsFsExistsAsync", JsFsExistsAsync)
 
 	modFS.AddFunction("statSync", "JsFsStatSync", JsFsStatSync)
 	modFS.AddAsyncFunction("statAsync", "JsFsStatAsync", JsFsStatAsync)
@@ -77,7 +77,7 @@ func registerExportedFunctions() {
 	modFS.AddAsyncFunction("chmodAsync", "JsFsChmodAsync", JsFsChmodAsync)
 
 	modFS.AddFunction("chownSync", "JsFsChownSync", JsFsChownSync)
-	modFS.AddAsyncFunction("chownAsync", "JsFsChownSync", JsFsChownAsync)
+	modFS.AddAsyncFunction("chownAsync", "JsFsChownAsync", JsFsChownAsync)
 
 	modFS.AddFunction("truncateSync", "JsFsTruncateSync", JsFsTruncateSync)
 	modFS.AddAsyncFunction("truncateAsync", "JsFsTruncateAsync", JsFsTruncateAsync)
@@ -92,7 +92,7 @@ func registerExportedFunctions() {
 	modFS.AddAsyncFunction("symlinkAsync", "JsFsSymLinkAsync", JsFsSymLinkAsync)
 
 	modFS.AddFunction("unlinkSync", "JsFsUnlinkSync", JsFsUnlinkSync)
-	modFS.AddAsyncFunction("unlinkAsync", "JsFsUnlinkSync", JsFsUnlinkAsync)
+	modFS.AddAsyncFunction("unlinkAsync", "JsFsUnlinkAsync", JsFsUnlinkAsync)
 
 	modFS.AddFunction("mkdirSync", "JsFsMkdirSync", JsFsMkdirSync)
 	modFS.AddAsyncFunction("mkdirAsync", "JsFsMkdirAsync", JsFsMkdirAsync)
@@ -301,7 +301,7 @@ func JsFsExistsSync(path string) bool {
 	return true
 }
 
-func JsFsExistsASync(path string, callback progpAPI.ScriptFunction) {
+func JsFsExistsAsync(path string, callback progpAPI.ScriptFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			callback.CallWithBool2(false)

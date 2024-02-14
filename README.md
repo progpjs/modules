@@ -1,8 +1,9 @@
-# Modules
+# ProgpJS Modules
 
-This project contains mains modules used by ProgpJS core.
+This project contains the main modules enhancing ProgpJS functionalities.
+* modCore: contains generally available functions, like console, setTimeout, ...
+* modNodeJS: is a NodeJS compatibility layer, implementing some common functions.
+* modReact: is a light ReactJS implementation for Server Side Rendering.
+* modHttp: allowing controlling the http server from javascript.
 
-* modCore: allows exposing the javascript package @progpjs/core which is automatically loaded by each script.
-* modNodeJs: exposed package allowing some nodejs compatibility.
-* modReact: implements a part of react api, allowing SSR (server side rendering).
-* modHttp: the javascript binding to the http server exposed by libHttpServer.
+See https://github.com/progpjs/documentation for more information.

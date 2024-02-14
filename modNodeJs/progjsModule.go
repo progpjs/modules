@@ -25,10 +25,10 @@ import (
 var gEmbedFS embed.FS
 
 func registerEmbeddedModule(innerPath string, alias ...string) {
-	ebPath := libProgpScripts.ReturnEmbeddedTypescriptModule(gEmbedFS, "embed/"+innerPath)
+	provider := libProgpScripts.ReturnEmbeddedTypescriptModule(gEmbedFS, "embed/"+innerPath)
 
 	for _, e := range alias {
-		libProgpScripts.AddJavascriptModuleProvider(e, ebPath)
+		libProgpScripts.AddJavascriptModuleProvider(e, provider)
 	}
 }
 
