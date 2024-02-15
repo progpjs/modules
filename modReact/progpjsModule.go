@@ -18,17 +18,17 @@ package modReact
 
 import (
 	"embed"
-	"github.com/progpjs/libProgpScripts"
+	"github.com/progpjs/progpScripts"
 )
 
 //go:embed embed/*
 var gEmbedFS embed.FS
 
 func registerEmbeddedModule(innerPath string, alias ...string) {
-	ebPath := libProgpScripts.ReturnEmbeddedTypescriptModule(gEmbedFS, "embed/"+innerPath)
+	ebPath := progpScripts.ReturnEmbeddedTypescriptModule(gEmbedFS, "embed/"+innerPath)
 
 	for _, e := range alias {
-		libProgpScripts.AddJavascriptModuleProvider(e, ebPath)
+		progpScripts.AddJavascriptModuleProvider(e, ebPath)
 	}
 }
 

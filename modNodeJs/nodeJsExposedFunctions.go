@@ -19,8 +19,8 @@ package modNodeJs
 import (
 	"encoding/json"
 	"errors"
-	"github.com/progpjs/libProgpScripts"
 	"github.com/progpjs/progpAPI"
+	"github.com/progpjs/progpScripts"
 	"io"
 	"os"
 	"path"
@@ -30,7 +30,7 @@ import (
 )
 
 func registerExportedFunctions() {
-	rg := libProgpScripts.GetFunctionRegistry()
+	rg := progpScripts.GetFunctionRegistry()
 	myMod := rg.UseGoNamespace("github.com/progpjs/modules/modNodeJs")
 
 	//region node:process

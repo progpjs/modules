@@ -21,8 +21,8 @@ import (
 	"errors"
 	"github.com/progpjs/libHttpServer"
 	"github.com/progpjs/libHttpServer/libFastHttpImpl"
-	"github.com/progpjs/libProgpScripts"
 	"github.com/progpjs/progpAPI"
+	"github.com/progpjs/progpScripts"
 	"mime/multipart"
 	"net/textproto"
 	"sync"
@@ -37,7 +37,7 @@ type httpFormFile struct {
 }
 
 func registerExportedFunctions() {
-	rg := libProgpScripts.GetFunctionRegistry()
+	rg := progpScripts.GetFunctionRegistry()
 	myMod := rg.UseGoNamespace("github.com/progpjs/modules/modHttp")
 	group := myMod.UseCustomGroup("progpjsModHttp")
 

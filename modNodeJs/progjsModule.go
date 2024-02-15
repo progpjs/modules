@@ -18,17 +18,17 @@ package modNodeJs
 
 import (
 	"embed"
-	"github.com/progpjs/libProgpScripts"
+	"github.com/progpjs/progpScripts"
 )
 
 //go:embed embed/*
 var gEmbedFS embed.FS
 
 func registerEmbeddedModule(innerPath string, alias ...string) {
-	provider := libProgpScripts.ReturnEmbeddedTypescriptModule(gEmbedFS, "embed/"+innerPath)
+	provider := progpScripts.ReturnEmbeddedTypescriptModule(gEmbedFS, "embed/"+innerPath)
 
 	for _, e := range alias {
-		libProgpScripts.AddJavascriptModuleProvider(e, provider)
+		progpScripts.AddJavascriptModuleProvider(e, provider)
 	}
 }
 

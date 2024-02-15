@@ -17,12 +17,12 @@
 package modCore
 
 import (
-	"github.com/progpjs/libProgpScripts"
 	"github.com/progpjs/progpAPI"
+	"github.com/progpjs/progpScripts"
 )
 
 func registerExportedFunctions() {
-	rg := libProgpScripts.GetFunctionRegistry()
+	rg := progpScripts.GetFunctionRegistry()
 	myMod := rg.UseGoNamespace("github.com/progpjs/modules/modCore")
 	group := myMod.UseGroupGlobal()
 
