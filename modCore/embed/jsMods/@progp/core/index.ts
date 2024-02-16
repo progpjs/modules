@@ -36,6 +36,23 @@ declare global {
 
     function progpStringToBuffer(text: string): ArrayBuffer;
     function progpBufferToString(b: ArrayBuffer): string;
+
+    /**
+     * progpDispose will dispose the SharedResource.
+     * It will call the dispose function binded to this resource
+     * and dispose the resource wrapper.
+     */
+    function progpDispose(res: SharedResource): void;
+
+    /**
+     * progpAutoDispose will automatically dispose all the resources created
+     * by the f function once this function is fully terminated, which include
+     * all the asynchrone function call from this function.
+     *
+     * For exemple if you open a file, this file resource will be disposed
+     * once this function ends, without having to manually call progpDispose(myFile).
+     */
+    function progpAutoDispose(f: Function): void;
 }
 
 //region Web Standard libraries
@@ -137,4 +154,8 @@ globalThis.Buffer = nodeJsBuffer;
 
 //endregion
 
+/**
+ * Allows to known when a SharedResource is required.
+ * Here it's mainly a placeholder since the underlying type is a number.
+ */
 export interface SharedResource {}

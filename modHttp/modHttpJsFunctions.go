@@ -93,7 +93,7 @@ func JsGetHost(rc *progpAPI.SharedResourceContainer, serverPort int, hostName st
 // JsStartServer starts the server designed by his port.
 // This server must have been configured before, otherwise it uses the default configuration.
 func JsStartServer(rc *progpAPI.SharedResourceContainer, serverPort int) error {
-	// Allows avoiding to exist the javascript VM.
+	// Allows avoiding exiting the javascript VM.
 	iso := rc.GetIsolate()
 	iso.IncreaseRefCount()
 

@@ -27,6 +27,20 @@ func registerExportedFunctions() {
 	group := myMod.UseGroupGlobal()
 
 	group.AddAsyncFunction("progpCallAfterMs", "JsProgpCallAfterMsAsync", JsProgpCallAfterMsAsync)
+	group.AddFunction("progpDispose", "JsProgpDispose", JsProgpDispose)
+	group.AddFunction("progpAutoDispose", "JsProgpAutoDispose", JsProgpAutoDispose)
+}
+
+func JsProgpAutoDispose(rc *progpAPI.SharedResourceContainer, f progpAPI.ScriptFunction) {
+	// Enable the auto-disposing mechanism for this function.
+	f.EnabledResourcesAutoDisposing(rc)
+
+	// Do the call himself.
+	f.CallWithUndefined()
+}
+
+func JsProgpDispose(res progpAPI.SharedResource) {
+	res.Dispose()
 }
 
 func JsProgpCallAfterMsAsync(timeInMs int, callback progpAPI.ScriptFunction) {
