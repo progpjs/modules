@@ -134,17 +134,21 @@ func JsVerbWithFunction(rc *progpAPI.SharedResourceContainer, resHost *progpAPI.
 	}
 
 	// Allows calling this function more than one time.
-	callback.KeepAlive()
+	callback.KeepAlive(rc.GetIsolate())
 
 	host.VERB(verb, requestPath, func(call libHttpServer.HttpRequest) error {
 		var mutex sync.Mutex
 		call.SetUnlockMutex(&mutex)
 
 		res := rc.NewSharedResource(call, nil)
+
+		// Allows disposing before the host script exit.
 		defer res.Dispose()
 
 		mutex.Lock()
 		callback.CallWithResource2(res)
+
+		// Will block the call until a response is sent.
 		mutex.Lock()
 
 		if !call.IsBodySend() {
