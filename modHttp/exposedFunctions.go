@@ -83,16 +83,20 @@ func JsConfigureServer(serverPort int, params libHttpServer.HttpServerStartParam
 }
 
 // JsGetHost returns an HttpHost object from a port and a hostname.
-func JsGetHost(serverPort int, hostName string) *progpAPI.SharedResource {
+func JsGetHost(rc *progpAPI.SharedResourceContainer, serverPort int, hostName string) *progpAPI.SharedResource {
 	server := libFastHttpImpl.GetFastHttpServer(serverPort)
 
 	host := server.GetHost(hostName)
-	return progpAPI.NewSharedResource(host, nil)
+	return rc.NewSharedResource(host, nil)
 }
 
 // JsStartServer starts the server designed by his port.
 // This server must have been configured before, otherwise it uses the default configuration.
-func JsStartServer(serverPort int) error {
+func JsStartServer(rc *progpAPI.SharedResourceContainer, serverPort int) error {
+	// Allows avoiding to exist the javascript VM.
+	iso := rc.GetIsolate()
+	iso.IncreaseRefCount()
+
 	server := libFastHttpImpl.GetFastHttpServer(serverPort)
 
 	if server.IsStarted() {
@@ -123,7 +127,7 @@ func JsStartServer(serverPort int) error {
 
 // JsVerbWithFunction bind a GET/POST/... call to a function inside a context.
 // This function is executed when the GET request match.
-func JsVerbWithFunction(resHost *progpAPI.SharedResource, verb string, requestPath string, callback progpAPI.ScriptFunction) error {
+func JsVerbWithFunction(rc *progpAPI.SharedResourceContainer, resHost *progpAPI.SharedResource, verb string, requestPath string, callback progpAPI.ScriptFunction) error {
 	host, ok := resHost.Value.(*libHttpServer.HttpHost)
 	if !ok {
 		return errors.New("invalid resource")
@@ -136,7 +140,7 @@ func JsVerbWithFunction(resHost *progpAPI.SharedResource, verb string, requestPa
 		var mutex sync.Mutex
 		call.SetUnlockMutex(&mutex)
 
-		res := progpAPI.NewSharedResource(call, nil)
+		res := rc.NewSharedResource(call, nil)
 		defer res.Dispose()
 
 		mutex.Lock()
