@@ -134,7 +134,7 @@ func JsVerbWithFunction(rc *progpAPI.SharedResourceContainer, resHost *progpAPI.
 	}
 
 	// Allows calling this function more than one time.
-	callback.KeepAlive(rc.GetIsolate())
+	callback.KeepAlive()
 
 	host.VERB(verb, requestPath, func(call libHttpServer.HttpRequest) error {
 		var mutex sync.Mutex
