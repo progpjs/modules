@@ -94,8 +94,8 @@ func JsGetHost(rc *progpAPI.SharedResourceContainer, serverPort int, hostName st
 // This server must have been configured before, otherwise it uses the default configuration.
 func JsStartServer(rc *progpAPI.SharedResourceContainer, serverPort int) error {
 	// Allows avoiding exiting the javascript VM.
-	iso := rc.GetIsolate()
-	iso.IncreaseRefCount()
+	ctx := rc.GetScriptContext()
+	ctx.IncreaseRefCount()
 
 	server := libFastHttpImpl.GetFastHttpServer(serverPort)
 
