@@ -35,7 +35,14 @@ declare global {
     function progpCallAfterMs(timeInMs: number, callback: Function): void;
 
     function progpStringToBuffer(text: string): ArrayBuffer;
+
     function progpBufferToString(b: ArrayBuffer): string;
+
+    /**
+     * Execute a script in a new context.
+     * This script can be typescript, or tsx, pr jsx.
+     */
+    function progpRunScript(scriptFilePath: string, securityGroup: string, callback: Function):void;
 
     /**
      * progpDispose will dispose the SharedResource.

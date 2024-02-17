@@ -17,8 +17,11 @@
 package modCore
 
 import (
+	"errors"
 	"github.com/progpjs/progpAPI"
 	"github.com/progpjs/progpjs"
+	"os"
+	"path"
 )
 
 func registerExportedFunctions() {
@@ -29,6 +32,26 @@ func registerExportedFunctions() {
 	group.AddAsyncFunction("progpCallAfterMs", "JsProgpCallAfterMsAsync", JsProgpCallAfterMsAsync)
 	group.AddFunction("progpDispose", "JsProgpDispose", JsProgpDispose)
 	group.AddFunction("progpAutoDispose", "JsProgpAutoDispose", JsProgpAutoDispose)
+	group.AddAsyncFunction("progpRunScript", "JsProgpRunScriptAsync", JsProgpRunScriptAsync)
+}
+
+func JsProgpRunScriptAsync(rc *progpAPI.SharedResourceContainer, scriptFilePath string, securityGroup string, callback progpAPI.JsFunction) {
+	if !path.IsAbs(scriptFilePath) {
+		cwd, _ := os.Getwd()
+		scriptFilePath = path.Join(cwd, scriptFilePath)
+	}
+
+	ctx := rc.GetScriptContext().GetScriptEngine().CreateNewScriptContext(securityGroup, false)
+
+	progpAPI.SafeGoRoutine(func() {
+		err := ctx.ExecuteScriptFile(scriptFilePath)
+
+		if err != nil {
+			callback.CallWithError(errors.New(err.Error))
+		} else {
+			callback.CallWithUndefined()
+		}
+	})
 }
 
 func JsProgpAutoDispose(rc *progpAPI.SharedResourceContainer, f progpAPI.JsFunction) {
