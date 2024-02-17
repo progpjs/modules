@@ -18,11 +18,11 @@ package modCore
 
 import (
 	"github.com/progpjs/progpAPI"
-	"github.com/progpjs/progpScripts"
+	"github.com/progpjs/progpjs"
 )
 
 func registerExportedFunctions() {
-	rg := progpScripts.GetFunctionRegistry()
+	rg := progpjs.GetFunctionRegistry()
 	myMod := rg.UseGoNamespace("github.com/progpjs/modules/modCore")
 	group := myMod.UseGroupGlobal()
 
@@ -31,7 +31,7 @@ func registerExportedFunctions() {
 	group.AddFunction("progpAutoDispose", "JsProgpAutoDispose", JsProgpAutoDispose)
 }
 
-func JsProgpAutoDispose(rc *progpAPI.SharedResourceContainer, f progpAPI.ScriptFunction) {
+func JsProgpAutoDispose(rc *progpAPI.SharedResourceContainer, f progpAPI.JsFunction) {
 	// Enable the auto-disposing mechanism for this function.
 	f.EnabledResourcesAutoDisposing(rc)
 
@@ -43,7 +43,7 @@ func JsProgpDispose(res progpAPI.SharedResource) {
 	res.Dispose()
 }
 
-func JsProgpCallAfterMsAsync(timeInMs int, callback progpAPI.ScriptFunction) {
+func JsProgpCallAfterMsAsync(timeInMs int, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		progpAPI.PauseMs(timeInMs)
 		callback.CallWithUndefined()

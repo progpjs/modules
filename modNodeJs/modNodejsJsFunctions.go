@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/progpjs/progpAPI"
-	"github.com/progpjs/progpScripts"
+	"github.com/progpjs/progpjs"
 	"io"
 	"os"
 	"path"
@@ -30,7 +30,7 @@ import (
 )
 
 func registerExportedFunctions() {
-	rg := progpScripts.GetFunctionRegistry()
+	rg := progpjs.GetFunctionRegistry()
 	myMod := rg.UseGoNamespace("github.com/progpjs/modules/modNodeJs")
 
 	//region node:process
@@ -158,7 +158,7 @@ func JsProcessGetUid() int {
 	return os.Getuid()
 }
 
-func JsProcessNextTickAsync(fct progpAPI.ScriptFunction) {
+func JsProcessNextTickAsync(fct progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		fct.CallWithUndefined()
 	})
@@ -301,7 +301,7 @@ func JsFsExistsSync(path string) bool {
 	return true
 }
 
-func JsFsExistsAsync(path string, callback progpAPI.ScriptFunction) {
+func JsFsExistsAsync(path string, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
 			callback.CallWithBool2(false)
@@ -311,7 +311,7 @@ func JsFsExistsAsync(path string, callback progpAPI.ScriptFunction) {
 	})
 }
 
-func JsFsStatAsync(path string, throwErrorIfMissing bool, callback progpAPI.ScriptFunction) {
+func JsFsStatAsync(path string, throwErrorIfMissing bool, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		stat, err := JsFsStatSync(path, throwErrorIfMissing)
 
@@ -373,7 +373,7 @@ func JsFsStatSync(path string, throwErrorIfMissing bool) (*FsFileState, error) {
 	return stat, nil
 }
 
-func JsFsAccessAsync(path string, mode int, callback progpAPI.ScriptFunction) {
+func JsFsAccessAsync(path string, mode int, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		err := JsFsAccessSync(path, mode)
 
@@ -435,7 +435,7 @@ func JsFsAccessSync(path string, mode int) error {
 	return nil
 }
 
-func JsFsChmodAsync(path string, mode uint32, callback progpAPI.ScriptFunction) {
+func JsFsChmodAsync(path string, mode uint32, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		err := JsFsChmodSync(path, mode)
 
@@ -451,7 +451,7 @@ func JsFsChmodSync(path string, mode uint32) error {
 	return os.Chmod(path, os.FileMode(mode))
 }
 
-func JsFsChownAsync(path string, uid int, gid int, callback progpAPI.ScriptFunction) {
+func JsFsChownAsync(path string, uid int, gid int, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		err := JsFsChownSync(path, uid, gid)
 
@@ -467,7 +467,7 @@ func JsFsChownSync(path string, uid int, gid int) error {
 	return os.Chown(path, uid, gid)
 }
 
-func JsFsTruncateAsync(path string, length int64, callback progpAPI.ScriptFunction) {
+func JsFsTruncateAsync(path string, length int64, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		err := JsFsTruncateSync(path, length)
 
@@ -508,7 +508,7 @@ func JsFsReadFileBytesSync(path string) ([]byte, error) {
 	return bytes, err
 }
 
-func JsFsCopyFileAsync(sourcePath, destPath string, callback progpAPI.ScriptFunction) {
+func JsFsCopyFileAsync(sourcePath, destPath string, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		err := JsFsCopyFileSync(sourcePath, destPath)
 
@@ -546,7 +546,7 @@ func JsFsCopyFileSync(sourcePath, destPath string) error {
 	return err
 }
 
-func JsFsLinkAsync(existingPath, newPath string, callback progpAPI.ScriptFunction) {
+func JsFsLinkAsync(existingPath, newPath string, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		err := JsFsLinkSync(existingPath, newPath)
 
@@ -562,7 +562,7 @@ func JsFsLinkSync(existingPath, newPath string) error {
 	return os.Link(existingPath, newPath)
 }
 
-func JsFsSymLinkAsync(existingPath, newPath string, callback progpAPI.ScriptFunction) {
+func JsFsSymLinkAsync(existingPath, newPath string, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		err := JsFsSymLinkSync(existingPath, newPath)
 
@@ -578,7 +578,7 @@ func JsFsSymLinkSync(existingPath, newPath string) error {
 	return os.Symlink(existingPath, newPath)
 }
 
-func JsFsUnlinkAsync(filePath string, callback progpAPI.ScriptFunction) {
+func JsFsUnlinkAsync(filePath string, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		err := JsFsUnlinkSync(filePath)
 
@@ -594,7 +594,7 @@ func JsFsUnlinkSync(filePath string) error {
 	return os.Remove(filePath)
 }
 
-func JsFsMkdirAsync(dirPath string, recursive bool, flag uint32, callback progpAPI.ScriptFunction) {
+func JsFsMkdirAsync(dirPath string, recursive bool, flag uint32, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		err := JsFsMkdirSync(dirPath, recursive, flag)
 
@@ -616,7 +616,7 @@ func JsFsMkdirSync(dirPath string, recursive bool, flag uint32) error {
 	}
 }
 
-func JsFsMkdtempAsync(prefix string, callback progpAPI.ScriptFunction) {
+func JsFsMkdtempAsync(prefix string, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		res, err := JsFsMkdtempSync(prefix)
 

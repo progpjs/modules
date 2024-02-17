@@ -19,10 +19,10 @@ package modHttp
 import (
 	"bytes"
 	"errors"
-	"github.com/progpjs/libHttpServer"
-	"github.com/progpjs/libHttpServer/libFastHttpImpl"
+	"github.com/progpjs/httpServer"
+	"github.com/progpjs/httpServer/libFastHttpImpl"
 	"github.com/progpjs/progpAPI"
-	"github.com/progpjs/progpScripts"
+	"github.com/progpjs/progpjs"
 	"mime/multipart"
 	"net/textproto"
 	"sync"
@@ -37,7 +37,7 @@ type httpFormFile struct {
 }
 
 func registerExportedFunctions() {
-	rg := progpScripts.GetFunctionRegistry()
+	rg := progpjs.GetFunctionRegistry()
 	myMod := rg.UseGoNamespace("github.com/progpjs/modules/modHttp")
 	group := myMod.UseCustomGroup("progpjsModHttp")
 
@@ -71,14 +71,14 @@ func registerExportedFunctions() {
 
 // JsConfigureServer configure a server designed by his port.
 // It does nothing if the server is already started, but returns false if the configuration can't be applied.
-func JsConfigureServer(serverPort int, params libHttpServer.HttpServerStartParams) bool {
+func JsConfigureServer(serverPort int, params httpServer.StartParams) bool {
 	server := libFastHttpImpl.GetFastHttpServer(serverPort)
 
 	if server.IsStarted() {
 		return false
 	}
 
-	server.SetStartServerParams(libHttpServer.HttpServerStartParams(params))
+	server.SetStartServerParams(httpServer.StartParams(params))
 	return true
 }
 
@@ -127,8 +127,8 @@ func JsStartServer(rc *progpAPI.SharedResourceContainer, serverPort int) error {
 
 // JsVerbWithFunction bind a GET/POST/... call to a function inside a context.
 // This function is executed when the GET request match.
-func JsVerbWithFunction(rc *progpAPI.SharedResourceContainer, resHost *progpAPI.SharedResource, verb string, requestPath string, callback progpAPI.ScriptFunction) error {
-	host, ok := resHost.Value.(*libHttpServer.HttpHost)
+func JsVerbWithFunction(rc *progpAPI.SharedResourceContainer, resHost *progpAPI.SharedResource, verb string, requestPath string, callback progpAPI.JsFunction) error {
+	host, ok := resHost.Value.(*httpServer.HttpHost)
 	if !ok {
 		return errors.New("invalid resource")
 	}
@@ -136,7 +136,7 @@ func JsVerbWithFunction(rc *progpAPI.SharedResourceContainer, resHost *progpAPI.
 	// Allows calling this function more than one time.
 	callback.KeepAlive()
 
-	host.VERB(verb, requestPath, func(call libHttpServer.HttpRequest) error {
+	host.VERB(verb, requestPath, func(call httpServer.HttpRequest) error {
 		var mutex sync.Mutex
 		call.SetUnlockMutex(&mutex)
 
@@ -163,7 +163,7 @@ func JsVerbWithFunction(rc *progpAPI.SharedResourceContainer, resHost *progpAPI.
 
 // JsReturnString set the response to returns.
 func JsReturnString(resHttpRequest *progpAPI.SharedResource, responseCode int, contentType string, responseText string) error {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource")
 	}
@@ -176,7 +176,7 @@ func JsReturnString(resHttpRequest *progpAPI.SharedResource, responseCode int, c
 }
 
 func JsRequestURI(resHttpRequest *progpAPI.SharedResource) (error, string) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource"), ""
 	}
@@ -185,7 +185,7 @@ func JsRequestURI(resHttpRequest *progpAPI.SharedResource) (error, string) {
 }
 
 func JsRequestPath(resHttpRequest *progpAPI.SharedResource) (error, string) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource"), ""
 	}
@@ -194,7 +194,7 @@ func JsRequestPath(resHttpRequest *progpAPI.SharedResource) (error, string) {
 }
 
 func JsRequestIP(resHttpRequest *progpAPI.SharedResource) (error, string) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource"), ""
 	}
@@ -203,7 +203,7 @@ func JsRequestIP(resHttpRequest *progpAPI.SharedResource) (error, string) {
 }
 
 func JsRequestMethod(resHttpRequest *progpAPI.SharedResource) (error, string) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource"), ""
 	}
@@ -212,7 +212,7 @@ func JsRequestMethod(resHttpRequest *progpAPI.SharedResource) (error, string) {
 }
 
 func JsRequestHost(resHttpRequest *progpAPI.SharedResource) (error, string) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource"), ""
 	}
@@ -221,7 +221,7 @@ func JsRequestHost(resHttpRequest *progpAPI.SharedResource) (error, string) {
 }
 
 func JsRequestQueryArgs(resHttpRequest *progpAPI.SharedResource) (error, map[string]string) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource"), nil
 	}
@@ -236,7 +236,7 @@ func JsRequestQueryArgs(resHttpRequest *progpAPI.SharedResource) (error, map[str
 }
 
 func JsRequestPostArgs(resHttpRequest *progpAPI.SharedResource) (error, map[string]any) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource"), nil
 	}
@@ -291,8 +291,8 @@ func JsRequestPostArgs(resHttpRequest *progpAPI.SharedResource) (error, map[stri
 	return nil, resMap
 }
 
-func openRequestFormFile(resHttpRequest *progpAPI.SharedResource, fieldName string, fileOffset int, callback progpAPI.ScriptFunction) (multipart.File, bool) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+func openRequestFormFile(resHttpRequest *progpAPI.SharedResource, fieldName string, fileOffset int, callback progpAPI.JsFunction) (multipart.File, bool) {
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		callback.CallWithError(errors.New("invalid resource"))
 		return nil, false
@@ -335,7 +335,7 @@ func openRequestFormFile(resHttpRequest *progpAPI.SharedResource, fieldName stri
 	return file, true
 }
 
-func JsRequestSaveFormFileAsync(resHttpRequest *progpAPI.SharedResource, fieldName string, fileOffset int, saveFilePath string, callback progpAPI.ScriptFunction) {
+func JsRequestSaveFormFileAsync(resHttpRequest *progpAPI.SharedResource, fieldName string, fileOffset int, saveFilePath string, callback progpAPI.JsFunction) {
 	file, ok := openRequestFormFile(resHttpRequest, fieldName, fileOffset, callback)
 	if !ok {
 		return
@@ -343,7 +343,7 @@ func JsRequestSaveFormFileAsync(resHttpRequest *progpAPI.SharedResource, fieldNa
 
 	defer file.Close()
 
-	err := libHttpServer.SaveStreamToFile(file, saveFilePath)
+	err := httpServer.SaveStreamToFile(file, saveFilePath)
 
 	if err != nil {
 		callback.CallWithError(errors.New("can't read file"))
@@ -353,7 +353,7 @@ func JsRequestSaveFormFileAsync(resHttpRequest *progpAPI.SharedResource, fieldNa
 	callback.CallWithUndefined()
 }
 
-func JsRequestReadFormFileAsync(resHttpRequest *progpAPI.SharedResource, fieldName string, fileOffset int, callback progpAPI.ScriptFunction) {
+func JsRequestReadFormFileAsync(resHttpRequest *progpAPI.SharedResource, fieldName string, fileOffset int, callback progpAPI.JsFunction) {
 	file, ok := openRequestFormFile(resHttpRequest, fieldName, fileOffset, callback)
 	if !ok {
 		return
@@ -373,7 +373,7 @@ func JsRequestReadFormFileAsync(resHttpRequest *progpAPI.SharedResource, fieldNa
 }
 
 func JsRequestWildcards(resHttpRequest *progpAPI.SharedResource) (error, []string) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource"), nil
 	}
@@ -382,7 +382,7 @@ func JsRequestWildcards(resHttpRequest *progpAPI.SharedResource) (error, []strin
 }
 
 func JsRequestRemainingSegments(resHttpRequest *progpAPI.SharedResource) (error, []string) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource"), nil
 	}
@@ -391,7 +391,7 @@ func JsRequestRemainingSegments(resHttpRequest *progpAPI.SharedResource) (error,
 }
 
 func JsRequestCookie(resHttpRequest *progpAPI.SharedResource, cookieName string) (error, map[string]any) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource"), nil
 	}
@@ -409,7 +409,7 @@ func JsRequestCookie(resHttpRequest *progpAPI.SharedResource, cookieName string)
 }
 
 func JsRequestHeaders(resHttpRequest *progpAPI.SharedResource) (error, map[string]string) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource"), nil
 	}
@@ -418,7 +418,7 @@ func JsRequestHeaders(resHttpRequest *progpAPI.SharedResource) (error, map[strin
 }
 
 func JsRequestSetHeader(resHttpRequest *progpAPI.SharedResource, key string, value string) error {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource")
 	}
@@ -428,7 +428,7 @@ func JsRequestSetHeader(resHttpRequest *progpAPI.SharedResource, key string, val
 }
 
 func JsRequestCookies(resHttpRequest *progpAPI.SharedResource) (error, map[string]map[string]any) {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource"), nil
 	}
@@ -437,8 +437,8 @@ func JsRequestCookies(resHttpRequest *progpAPI.SharedResource) (error, map[strin
 	return err, c
 }
 
-func JsRequestSetCookie(resHttpRequest *progpAPI.SharedResource, key string, value string, options libHttpServer.HttpCookieOptions) error {
-	call, ok := resHttpRequest.Value.(libHttpServer.HttpRequest)
+func JsRequestSetCookie(resHttpRequest *progpAPI.SharedResource, key string, value string, options httpServer.HttpCookieOptions) error {
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
 		return errors.New("invalid resource")
 	}
