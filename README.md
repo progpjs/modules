@@ -1,4 +1,4 @@
-# ProgpJS Modules
+# ProgpJS v2 - Modules
 
 This project contains the main modules enhancing ProgpJS functionalities.
 * modCore: contains generally available functions, like console, setTimeout, ...
