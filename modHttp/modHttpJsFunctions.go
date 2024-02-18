@@ -19,10 +19,10 @@ package modHttp
 import (
 	"bytes"
 	"errors"
-	"github.com/progpjs/httpServer"
-	"github.com/progpjs/httpServer/libFastHttpImpl"
-	"github.com/progpjs/progpAPI"
-	"github.com/progpjs/progpjs"
+	"github.com/progpjs/httpServer/v2"
+	"github.com/progpjs/httpServer/v2/libFastHttpImpl"
+	"github.com/progpjs/progpAPI/v2"
+	"github.com/progpjs/progpjs/v2"
 	"mime/multipart"
 	"net/textproto"
 	"sync"
@@ -38,7 +38,7 @@ type httpFormFile struct {
 
 func registerExportedFunctions() {
 	rg := progpjs.GetFunctionRegistry()
-	myMod := rg.UseGoNamespace("github.com/progpjs/modules/modHttp")
+	myMod := rg.UseGoNamespace("github.com/progpjs/modules/v2/modHttp")
 	group := myMod.UseCustomGroup("progpjsModHttp")
 
 	group.AddFunction("startServer", "JsStartServer", JsStartServer)

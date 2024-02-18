@@ -18,7 +18,7 @@ package modHttp
 
 import (
 	"embed"
-	"github.com/progpjs/progpjs"
+	"github.com/progpjs/progpjs/v2"
 )
 
 //go:embed embed/*

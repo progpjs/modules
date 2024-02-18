@@ -17,15 +17,15 @@
 package modCore
 
 import (
-	"github.com/progpjs/progpAPI"
-	"github.com/progpjs/progpjs"
+	"github.com/progpjs/progpAPI/v2"
+	"github.com/progpjs/progpjs/v2"
 	"os"
 	"path"
 )
 
 func registerExportedFunctions() {
 	rg := progpjs.GetFunctionRegistry()
-	myMod := rg.UseGoNamespace("github.com/progpjs/modules/modCore")
+	myMod := rg.UseGoNamespace("github.com/progpjs/modules/v2/modCore")
 	group := myMod.UseGroupGlobal()
 
 	group.AddAsyncFunction("progpCallAfterMs", "JsProgpCallAfterMsAsync", JsProgpCallAfterMsAsync)
