@@ -17,7 +17,6 @@
 package modCore
 
 import (
-	"errors"
 	"github.com/progpjs/progpAPI"
 	"github.com/progpjs/progpjs"
 	"os"
@@ -44,10 +43,10 @@ func JsProgpRunScriptAsync(rc *progpAPI.SharedResourceContainer, scriptFilePath 
 	ctx := rc.GetScriptContext().GetScriptEngine().CreateNewScriptContext(securityGroup, false)
 
 	progpAPI.SafeGoRoutine(func() {
-		err := ctx.ExecuteScriptFile(scriptFilePath)
+		err := ctx.ExecuteChildScriptFile(scriptFilePath)
 
 		if err != nil {
-			callback.CallWithError(errors.New(err.Error))
+			callback.CallWithError(err)
 		} else {
 			callback.CallWithUndefined()
 		}
