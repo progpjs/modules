@@ -315,4 +315,8 @@ export class HttpHost {
 
 export type HttpRequestHandler = (res: HttpRequest) => Promise<void>;
 
+export function asHttpRequest(f: (req:HttpRequest)=>void) {
+    return (resId:SharedResource)=> f(new HttpRequest(resId, gSecureCaller))
+}
+
 let gSecureCaller = {v: {}};
