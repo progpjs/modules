@@ -137,19 +137,15 @@ func JsVerbWithFunction(rc *progpAPI.SharedResourceContainer, resHost *progpAPI.
 	callback.KeepAlive()
 
 	host.VERB(verb, requestPath, func(call httpServer.HttpRequest) error {
-		var mutex sync.Mutex
-		call.SetUnlockMutex(&mutex)
-
 		res := rc.NewSharedResource(call, nil)
 
 		// Allows disposing before the host script exit.
 		defer res.Dispose()
 
-		mutex.Lock()
 		callback.CallWithResource2(res)
 
 		// Will block the call until a response is sent.
-		mutex.Lock()
+		call.WaitResponse()
 
 		if !call.IsBodySend() {
 			return NoResponseSendError
