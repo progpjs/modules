@@ -19,31 +19,36 @@ package modNodeJs
 import (
 	"embed"
 	"github.com/progpjs/progpjs/v2"
+	"strings"
 )
 
 //go:embed embed/*
 var gEmbedFS embed.FS
 
 func registerEmbeddedModule(innerPath string, alias ...string) {
-	provider := progpjs.ReturnEmbeddedTypescriptModule(gEmbedFS, "embed/"+innerPath)
+	if strings.HasPrefix("node:", innerPath) {
+		innerPath = innerPath[5:]
+	}
+
+	ebPath := progpjs.ReturnEmbeddedTypescriptModule(gEmbedFS, "embed/"+innerPath)
 
 	for _, e := range alias {
-		progpjs.AddJavascriptModuleProvider(e, provider)
+		progpjs.AddJavascriptModuleProvider(e, ebPath)
 	}
 }
 
 func InstallProgpJsModule() {
 	registerExportedFunctions()
 
-	registerEmbeddedModule("jsMods/assert.ts", "assert", "node:assert")
-	registerEmbeddedModule("jsMods/test.ts", "test", "node:test")
+	registerEmbeddedModule("jsMods/@progp/node/assert.ts", "assert", "node:assert")
+	registerEmbeddedModule("jsMods/@progp/node/test.ts", "test", "node:test")
 
-	registerEmbeddedModule("jsMods/fs.ts", "fs", "node:fs")
-	registerEmbeddedModule("jsMods/os.ts", "os", "node:os")
-	registerEmbeddedModule("jsMods/path.ts", "path", "node:path")
-	registerEmbeddedModule("jsMods/process.ts", "process", "node:process")
-	registerEmbeddedModule("jsMods/stream.ts", "stream", "node:stream")
-	registerEmbeddedModule("jsMods/buffer.ts", "buffer", "node:buffer")
-	registerEmbeddedModule("jsMods/timers.ts", "timers", "node:timers")
-	registerEmbeddedModule("jsMods/url.ts", "url", "node:url")
+	registerEmbeddedModule("jsMods/@progp/node/fs.ts", "fs", "node:fs")
+	registerEmbeddedModule("jsMods/@progp/node/os.ts", "os", "node:os")
+	registerEmbeddedModule("jsMods/@progp/node/path.ts", "path", "node:path")
+	registerEmbeddedModule("jsMods/@progp/node/process.ts", "process", "node:process")
+	registerEmbeddedModule("jsMods/@progp/node/stream.ts", "stream", "node:stream")
+	registerEmbeddedModule("jsMods/@progp/node/buffer.ts", "buffer", "node:buffer")
+	registerEmbeddedModule("jsMods/@progp/node/timers.ts", "timers", "node:timers")
+	registerEmbeddedModule("jsMods/@progp/node/url.ts", "url", "node:url")
 }
