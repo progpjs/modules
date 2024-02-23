@@ -1,3 +1,19 @@
 {
-  "version": "0.0.1"
+  "version": "0.0.3",
+  "name": "@progp/react",
+  "description": "ReactJS Server Side Rendering for ProgpJS",
+  "main": "index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/progpjs/npm_packages.git"
+  },
+  "keywords": [
+    "progpjs"
+  ],
+  "author": "Johan PIQUET",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/progpjs/npm_packages.git/issues"
+  },
+  "homepage": "https://github.com/progpjs/npm_packages.git#readme"
 }

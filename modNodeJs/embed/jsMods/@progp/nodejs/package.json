@@ -1,7 +1,7 @@
 {
-  "version": "0.0.2",
-  "name": "@progp/core",
-  "description": "Core library for ProgpJS",
+  "version": "0.0.1",
+  "name": "@progp/nodejs",
+  "description": "NodeJS compatibility layer for ProgpJS",
   "main": "index.ts",
   "repository": {
     "type": "git",
