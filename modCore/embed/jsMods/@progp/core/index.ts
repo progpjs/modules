@@ -60,6 +60,18 @@ declare global {
      * once this function ends, without having to manually call progpDispose(myFile).
      */
     function progpAutoDispose(f: Function): void;
+
+    /**
+     * Allow to return a string for a shared resource implementing interface progpAPI.ProgpReturnStringAction
+     */
+    function progpReturnString(res: SharedResource, value: string): void;
+
+    /**
+     * Allows to send a signal to all signal listeners.
+     * @param signal    The signal name
+     * @param data      A simlpe string or a json encoded string.
+     */
+    function progpSendSignal(signal: string, data: string): void;
 }
 
 //region Web Standard libraries
