@@ -34,5 +34,6 @@ func registerEmbeddedModule(innerPath string, alias ...string) {
 
 func InstallModule() {
 	registerEmbeddedModule("jsMods/@progp/core/index.ts", "@progp/core")
+	registerEmbeddedModule("jsMods/@progp/core/core_nodejscompat.ts", "@progp/core_nodejscompat")
 	registerExportedFunctions()
 }

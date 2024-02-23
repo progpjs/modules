@@ -17,6 +17,7 @@
 package modCore
 
 import (
+	"errors"
 	"github.com/progpjs/progpAPI/v2"
 	"github.com/progpjs/progpjs/v2"
 	"os"
@@ -32,6 +33,20 @@ func registerExportedFunctions() {
 	group.AddFunction("progpDispose", "JsProgpDispose", JsProgpDispose)
 	group.AddFunction("progpAutoDispose", "JsProgpAutoDispose", JsProgpAutoDispose)
 	group.AddAsyncFunction("progpRunScript", "JsProgpRunScriptAsync", JsProgpRunScriptAsync)
+
+	group.AddFunction("progpReturn", "JsProgpReturn", JsProgpReturn)
+}
+
+type ProgpReturnAction interface {
+	Return(value string) error
+}
+
+func JsProgpReturn(res *progpAPI.SharedResource, value string) error {
+	if action, ok := res.Value.(ProgpReturnAction); ok {
+		return action.Return(value)
+	}
+
+	return errors.New("invalid return call")
 }
 
 func JsProgpRunScriptAsync(rc *progpAPI.SharedResourceContainer, scriptFilePath string, securityGroup string, callback progpAPI.JsFunction) {

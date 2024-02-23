@@ -154,13 +154,6 @@ globalThis.console.info = function(...data: any[]) {
 
 //endregion
 
-//region NodeJS buffer
-
-const nodeJsBuffer = require("node:buffer");
-globalThis.Buffer = nodeJsBuffer;
-
-//endregion
-
 /**
  * Allows to known when a SharedResource is required.
  * Here it's mainly a placeholder since the underlying type is a number.
