@@ -32,7 +32,7 @@ func registerEmbeddedModule(innerPath string, alias ...string) {
 	}
 }
 
-func InstallModule() {
+func InstallProgpJsModule() {
 	// Here "@progp/react" is used when adding an alias
 	// while "react" is used when react isn't found anywhere.
 	//

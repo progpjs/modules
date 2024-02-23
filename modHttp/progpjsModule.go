@@ -16,7 +16,7 @@
 
 package modHttp
 
-func InstallModule() {
+func InstallProgpJsModule() {
 	registerExportedFunctions()
 	registerEmbeddedModules()
 }

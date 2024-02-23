@@ -32,7 +32,7 @@ func registerEmbeddedModule(innerPath string, alias ...string) {
 	}
 }
 
-func InstallModule() {
+func InstallProgpJsModule() {
 	registerExportedFunctions()
 
 	registerEmbeddedModule("jsMods/assert.ts", "assert", "node:assert")
