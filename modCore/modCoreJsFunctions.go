@@ -33,12 +33,16 @@ func registerExportedFunctions() {
 	group.AddFunction("progpDispose", "JsProgpDispose", JsProgpDispose)
 	group.AddFunction("progpAutoDispose", "JsProgpAutoDispose", JsProgpAutoDispose)
 	group.AddAsyncFunction("progpRunScript", "JsProgpRunScriptAsync", JsProgpRunScriptAsync)
-
+	group.AddFunction("progpSignal", "JsProgpSignal", JsProgpSignal)
 	group.AddFunction("progpReturn", "JsProgpReturn", JsProgpReturn)
 }
 
 type ProgpReturnAction interface {
 	Return(value string) error
+}
+
+func JsProgpSignal(rc *progpAPI.SharedResourceContainer, signal string) error {
+	return progpjs.EmitProgpSignal(rc.GetScriptContext(), signal)
 }
 
 func JsProgpReturn(res *progpAPI.SharedResource, value string) error {
