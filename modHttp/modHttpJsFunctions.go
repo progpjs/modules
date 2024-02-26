@@ -78,7 +78,7 @@ func JsConfigureServer(serverPort int, params httpServer.StartParams) bool {
 		return false
 	}
 
-	server.SetStartServerParams(httpServer.StartParams(params))
+	server.SetStartServerParams(params)
 	return true
 }
 
