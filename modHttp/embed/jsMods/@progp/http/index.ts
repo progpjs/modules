@@ -48,7 +48,10 @@ interface ModHttpServer {
     requestSaveFormFile(resId: SharedResource, fieldName: string, fileId: number, saveFilePath: string, callback: Function): void;
 
     sendFile(resId: SharedResource, filePath: string): void
-    sendFileAsIs(resId: SharedResource, filePath: string, mimeType: string, contentEncoding: string): void
+    sendFileAsIs(resId: SharedResource, filePath: string, mimeType: string, contentEncoding: string, callback: Function): void
+
+    gzipCompressFile(sourceFile: string, destFile: string, compressionLevel: number): void;
+    brotliCompressFile(sourceFile: string, destFile: string, compressionLevel: number): void;
 }
 
 interface CookieOptions {
@@ -387,6 +390,48 @@ export type HttpRequestHandler = (res: HttpRequest) => Promise<void>;
 
 export function asHttpRequest(f: (req:HttpRequest)=>void) {
     return (resId:SharedResource)=> f(new HttpRequest(resId, gSecureCaller))
+}
+
+export const GZIP_COMPRESSION_LEVEL_NO_COMPRESSION = 0
+export const GZIP_COMPRESSION_LEVEL_BEST_SPEED = 1
+export const GZIP_COMPRESSION_LEVEL_BEST_COMPRESSION = 9
+export const GZIP_COMPRESSION_LEVEL_DEFAULT_COMPRESSION = -1
+export const GZIP_COMPRESSION_LEVEL_HUFFMAN_ONLY = -2
+
+/**
+ * Allows to compress a file with GZip in the same way as what http server do.
+ * This allows to store a pre-compressed file in order to serve it as-is for full-speed.
+ */
+export async function gzipCompressFile(sourceFilePath: string, targetFilePath: string, compressionLevel?: number): Promise<void> {
+    // Default is best compression level.
+    if (!compressionLevel) compressionLevel = GZIP_COMPRESSION_LEVEL_BEST_COMPRESSION;
+
+    return new Promise<void>(function (resolve, reject) {
+        modHttp.gzipCompressFile(sourceFilePath, targetFilePath, compressionLevel, (err)=>{
+            if (err) reject(err);
+            else resolve();
+        });
+    });
+}
+
+export const BROTLI_COMPRESSION_LEVEL_BEST_SPEED = 0
+export const BROTLI_COMPRESSION_LEVEL_BEST_COMPRESSION = 11
+export const BROTLI_COMPRESSION_LEVEL_DEFAULT_COMPRESSION = 6
+
+/**
+ * Allows to compress a file with Brotli in the same way as what http server do.
+ * This allows to store a pre-compressed file in order to serve it as-is for full-speed.
+ */
+export async function brotliCompressFile(sourceFilePath: string, targetFilePath: string, compressionLevel?: number): Promise<void> {
+    // Default is best compression level.
+    if (!compressionLevel) compressionLevel = BROTLI_COMPRESSION_LEVEL_BEST_COMPRESSION;
+
+    return new Promise<void>(function (resolve, reject) {
+        modHttp.brotliCompressFile(sourceFilePath, targetFilePath, compressionLevel, (err)=>{
+            if (err) reject(err);
+            else resolve();
+        });
+    });
 }
 
 let gSecureCaller = {v: {}};

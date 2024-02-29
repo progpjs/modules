@@ -25,6 +25,8 @@ import (
 	"github.com/progpjs/progpjs/v2"
 	"mime/multipart"
 	"net/textproto"
+	"os"
+	"path"
 	"sync"
 )
 
@@ -70,6 +72,9 @@ func registerExportedFunctions() {
 
 	group.AddFunction("sendFileAsIs", "JsSendFileAsIs", JsSendFileAsIs)
 	group.AddFunction("sendFile", "JsSendFile", JsSendFile)
+
+	group.AddAsyncFunction("gzipCompressFile", "JsGzipCompressFileAsync", JsGzipCompressFileAsync)
+	group.AddAsyncFunction("brotliCompressFile", "JsBrotliCompressFileAsync", JsBrotliCompressFileAsync)
 }
 
 // JsConfigureServer configure a server designed by his port.
@@ -465,4 +470,44 @@ func JsSendFile(resHttpRequest *progpAPI.SharedResource, filePath string) error 
 	}
 
 	return call.SendFile(filePath)
+}
+
+func JsGzipCompressFileAsync(sourceFilePath string, destFilePath string, compressionLevel int, callback progpAPI.JsFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		outDir := path.Dir(destFilePath)
+
+		err := os.MkdirAll(outDir, os.ModePerm)
+		if err != nil {
+			callback.CallWithError(err)
+			return
+		}
+
+		err = libFastHttpImpl.GzipCompressFile(sourceFilePath, destFilePath, compressionLevel)
+		if err != nil {
+			callback.CallWithError(err)
+			return
+		}
+
+		callback.CallWithUndefined()
+	})
+}
+
+func JsBrotliCompressFileAsync(sourceFilePath string, destFilePath string, compressionLevel int, callback progpAPI.JsFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		outDir := path.Dir(destFilePath)
+
+		err := os.MkdirAll(outDir, os.ModePerm)
+		if err != nil {
+			callback.CallWithError(err)
+			return
+		}
+
+		err = libFastHttpImpl.BrotliCompressFile(sourceFilePath, destFilePath, compressionLevel)
+		if err != nil {
+			callback.CallWithError(err)
+			return
+		}
+
+		callback.CallWithUndefined()
+	})
 }
