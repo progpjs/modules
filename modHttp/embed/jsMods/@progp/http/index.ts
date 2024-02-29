@@ -46,13 +46,16 @@ interface ModHttpServer {
 
     requestReadFormFile(resId: SharedResource, fieldName: string, fileId: number, callback: Function): any;
     requestSaveFormFile(resId: SharedResource, fieldName: string, fileId: number, saveFilePath: string, callback: Function): void;
+
+    sendFile(resId: SharedResource, filePath: string): void
+    sendFileAsIs(resId: SharedResource, filePath: string, mimeType: string, contentEncoding: string): void
 }
 
 interface CookieOptions {
     isHttpOnly?:   boolean
     isSecure?:     boolean
     sameSiteType?: number
-    domaine?:      string
+    domain?:       string
     expireTime?:   number
     maxAge?:       number
 }
@@ -106,6 +109,16 @@ export class HttpRequest {
 
     returnHtml(httpCode: number, value: string) {
         modHttp.returnString(this.resId, httpCode, this._contentType, value);
+    }
+
+    sendFile(filePath: string) {
+        modHttp.sendFile(this.resId, filePath);
+    }
+
+    sendFileAsIs(filePath: string, mimeType?: string, contentEncoding?: string) {
+        if (mimeType===undefined) mimeType = "";
+        if (contentEncoding===undefined) contentEncoding = "";
+        modHttp.sendFileAsIs(this.resId, filePath, mimeType, contentEncoding);
     }
 
     setHeader(key: string, value: string) {
@@ -261,26 +274,83 @@ export class HttpRequest {
     }
 }
 
+export interface HttCertificate {
+    hostName: string
+
+    certFilePath?: string
+    keyFilePath?: string
+
+    useLetsEncrypt?: boolean,
+    cacheDir?: string
+}
+
 export interface HttpServerConfig {
+    enableHttps?: boolean
+    certificates: HttCertificate[]
 }
 
 export class HttpServer {
     private readonly serverPort: number;
     private isStarted: boolean = false;
+    private config: HttpServerConfig|undefined;
 
     constructor(serverPort: number) {
         this.serverPort = serverPort;
     }
 
     configure(config: HttpServerConfig) {
-        // Return false if the server is already started.
-        if (!modHttp.configureServer(this.serverPort, config)) {
-            this.isStarted = true;
+        this.config = config
+    }
+
+    /**
+     * Register a https certificate.
+     *
+     * To create your dev certificate:
+     * 1- Install mkcert from https://github.com/FiloSottile/mkcert
+     * 2- mkcert -install		--> to do one time, create the root CA certificate, which is required to create your own test certificate.
+     * 3- mkcert myhostname     --> create a valid certificate (here you can replace myhostname by localhost).
+     *
+     * Automatic dev certificate isn't supported anymore since it introduce difficult behaviors.
+     */
+    addHttpsCertificate(hostName: string, certFilePath: string, keyFilePath: string) {
+        if (!this.config) {
+            this.config = {
+                enableHttps: true,
+                certificates: []
+            }
         }
+
+        this.config!.certificates.push({
+            hostName: hostName,
+            certFilePath: certFilePath,
+            keyFilePath: keyFilePath
+        });
+    }
+
+    addLetEncryptCertificate(hostName: string, cacheDir: string) {
+        if (!this.config) {
+            this.config = {
+                enableHttps: true,
+                certificates: []
+            }
+        }
+
+        this.config!.certificates.push({
+            hostName: hostName,
+            useLetsEncrypt: true,
+            cacheDir: cacheDir
+        });
     }
 
     start() {
         if (this.isStarted) return;
+
+        if (this.config && !modHttp.configureServer(this.serverPort, this.config)) {
+            // configureServer returns false if the server is already started.
+            this.isStarted = true;
+            return;
+        }
+
         modHttp.startServer(this.serverPort);
         this.isStarted = true;
     }

@@ -67,6 +67,9 @@ func registerExportedFunctions() {
 	group.AddFunction("requestHeaders", "JsRequestHeaders", JsRequestHeaders)
 	group.AddFunction("responseSetHeader", "JsRequestSetHeader", JsRequestSetHeader)
 	group.AddFunction("responseSetCookie", "JsRequestSetCookie", JsRequestSetCookie)
+
+	group.AddFunction("sendFileAsIs", "JsSendFileAsIs", JsSendFileAsIs)
+	group.AddFunction("sendFile", "JsSendFile", JsSendFile)
 }
 
 // JsConfigureServer configure a server designed by his port.
@@ -337,7 +340,9 @@ func JsRequestSaveFormFileAsync(resHttpRequest *progpAPI.SharedResource, fieldNa
 		return
 	}
 
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	err := httpServer.SaveStreamToFile(file, saveFilePath)
 
@@ -355,7 +360,9 @@ func JsRequestReadFormFileAsync(resHttpRequest *progpAPI.SharedResource, fieldNa
 		return
 	}
 
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	var buffer bytes.Buffer
 
@@ -440,4 +447,22 @@ func JsRequestSetCookie(resHttpRequest *progpAPI.SharedResource, key string, val
 	}
 
 	return call.SetCookie(key, value, options)
+}
+
+func JsSendFileAsIs(resHttpRequest *progpAPI.SharedResource, filePath string, mimeType string, contentEncoding string) error {
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
+	if !ok {
+		return errors.New("invalid resource")
+	}
+
+	return call.SendFileAsIs(filePath, mimeType, contentEncoding)
+}
+
+func JsSendFile(resHttpRequest *progpAPI.SharedResource, filePath string) error {
+	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
+	if !ok {
+		return errors.New("invalid resource")
+	}
+
+	return call.SendFile(filePath)
 }

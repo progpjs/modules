@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// dev-version2
 
 declare global {
     /**
-     * Get a natif function group (function in C++ or Go).
+     * Get a native function group (function in C++ or Go).
      * Return undefined if the security level is inferior to the security level of this group.
      */
     function progpGetModule<T>(modName: string): T | undefined; // Declared in C++, group "progpCore".
@@ -46,7 +47,7 @@ declare global {
 
     /**
      * progpDispose will dispose the SharedResource.
-     * It will call the dispose function binded to this resource
+     * It will call the dispose function bound to this resource
      * and dispose the resource wrapper.
      */
     function progpDispose(res: SharedResource): void;
@@ -54,9 +55,9 @@ declare global {
     /**
      * progpAutoDispose will automatically dispose all the resources created
      * by the f function once this function is fully terminated, which include
-     * all the asynchrone function call from this function.
+     * all the asynchronous function call from this function.
      *
-     * For exemple if you open a file, this file resource will be disposed
+     * For example if you open a file, this file resource will be disposed
      * once this function ends, without having to manually call progpDispose(myFile).
      */
     function progpAutoDispose(f: Function): void;
@@ -69,7 +70,7 @@ declare global {
     /**
      * Allows to send a signal to all signal listeners.
      * @param signal    The signal name
-     * @param data      A simlpe string or a json encoded string.
+     * @param data      A simple string or a json encoded string.
      */
     function progpSendSignal(signal: string, data: string): void;
 }
