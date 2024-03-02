@@ -18,6 +18,7 @@ package modHttp
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"github.com/progpjs/httpServer/v2"
 	"github.com/progpjs/httpServer/v2/libFastHttpImpl"
@@ -75,6 +76,7 @@ func registerExportedFunctions() {
 
 	group.AddAsyncFunction("gzipCompressFile", "JsGzipCompressFileAsync", JsGzipCompressFileAsync)
 	group.AddAsyncFunction("brotliCompressFile", "JsBrotliCompressFileAsync", JsBrotliCompressFileAsync)
+	group.AddAsyncFunction("fetch", "JsFetchAsync", JsFetchAsync)
 }
 
 // JsConfigureServer configure a server designed by his port.
@@ -349,7 +351,7 @@ func JsRequestSaveFormFileAsync(resHttpRequest *progpAPI.SharedResource, fieldNa
 		_ = file.Close()
 	}()
 
-	err := httpServer.SaveStreamToFile(file, saveFilePath)
+	err := httpServer.SaveStreamBodyToFile(file, saveFilePath)
 
 	if err != nil {
 		callback.CallWithError(errors.New("can't read file"))
@@ -510,4 +512,85 @@ func JsBrotliCompressFileAsync(sourceFilePath string, destFilePath string, compr
 
 		callback.CallWithUndefined()
 	})
+}
+
+func JsFetchAsync(url string, options JsFetchOptions, callback progpAPI.JsFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		if options.Method == "" {
+			options.Method = "GET"
+		}
+
+		fetchOptions := libFastHttpImpl.FetchOptions{
+			SendHeaders: options.SendHeaders,
+			SendCookies: options.SendCookies,
+			SkipBody:    options.SkipBody,
+		}
+
+		httpResult, err := libFastHttpImpl.Fetch(url, options.Method, fetchOptions)
+		if err != nil {
+			callback.CallWithError(err)
+			return
+		}
+
+		defer httpResult.Dispose()
+
+		jsResult := JsFetchResult{}
+		jsResult.StatusCode = httpResult.StatusCode()
+
+		if !options.SkipBody && ((jsResult.StatusCode == 200) || options.ForceReturningBody) {
+			if options.StreamBodyToFile == "" {
+				jsResult.Body = httpResult.GetBodyAsString()
+			} else {
+				err = httpResult.StreamBodyToFile(options.StreamBodyToFile)
+				if err != nil {
+					callback.CallWithError(err)
+					return
+				}
+			}
+		}
+
+		if options.ReturnHeaders {
+			jsResult.Headers = httpResult.GetHeaders()
+		}
+
+		if options.ReturnCookies {
+			jsResult.Cookies, err = httpResult.GetCookies()
+			if err != nil {
+				callback.CallWithError(err)
+				return
+			}
+		}
+
+		asJson, err := json.Marshal(jsResult)
+		if err != nil {
+			callback.CallWithError(err)
+			return
+		}
+
+		callback.CallWithStringBuffer2(asJson)
+	})
+}
+
+type JsFetchResult struct {
+	StatusCode int                       `json:"statusCode"`
+	Body       string                    `json:"body"`
+	Headers    map[string]string         `json:"headers"`
+	Cookies    map[string]map[string]any `json:"cookies"`
+}
+
+type JsFetchOptions struct {
+	Method           string `json:"method"`
+	StreamBodyToFile string `json:"streamBodyToFile"`
+	ReturnHeaders    bool   `json:"returnHeaders"`
+	ReturnCookies    bool   `json:"returnCookies"`
+
+	SendHeaders map[string]string `json:"sendHeaders"`
+	SendCookies map[string]string `json:"sendCookies"`
+
+	// ForceReturningBody allows to return body event if response code isn't 200 Ok.
+	ForceReturningBody bool `json:"forceReturningBody"`
+
+	// SkipBody allows to avoid requesting the body.
+	// Is useful if testing target existence or when we want to only get his headers.
+	SkipBody bool `json:"skipBody"`
 }

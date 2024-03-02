@@ -52,6 +52,8 @@ interface ModHttpServer {
 
     gzipCompressFile(sourceFile: string, destFile: string, compressionLevel: number): void;
     brotliCompressFile(sourceFile: string, destFile: string, compressionLevel: number): void;
+
+    fetch(url: string, options: FetchOptions, callback: Function): void;
 }
 
 interface CookieOptions {
@@ -292,6 +294,51 @@ export interface HttpServerConfig {
     certificates: HttCertificate[]
 }
 
+export interface FetchOptions {
+    /**
+     * Indicate the http method to use.
+     * Default is GET.
+     */
+    method?: string
+
+    /**
+     * If set, save the body inside a file.
+     */
+    streamBodyToFile?: string
+
+    /**
+     * If true, returns the response headers.
+     */
+    returnHeaders?: boolean
+
+    /**
+     * If true, returns the response cookies.
+     */
+    returnCookies?: boolean
+
+    /**
+     * If set, set the list of the headers to send.
+     */
+    sendHeaders?: {[key:string]:string}
+
+
+    /**
+     * If set, set the list of the cookies to send.
+     */
+    setCookies?: {[key:string]:string}
+
+    /**
+     * Allows to return body event if response code isn't 200 Ok.
+     */
+    forceReturningBody?: boolean
+
+    /**
+     * Allows to avoid requesting the body.
+     * Is useful if testing target existence or when we want to only get his headers.
+     */
+    skipBody?: boolean
+}
+
 export class HttpServer {
     private readonly serverPort: number;
     private isStarted: boolean = false;
@@ -407,7 +454,7 @@ export async function gzipCompressFile(sourceFilePath: string, targetFilePath: s
     if (!compressionLevel) compressionLevel = GZIP_COMPRESSION_LEVEL_BEST_COMPRESSION;
 
     return new Promise<void>(function (resolve, reject) {
-        modHttp.gzipCompressFile(sourceFilePath, targetFilePath, compressionLevel, (err)=>{
+        modHttp.gzipCompressFile(sourceFilePath, targetFilePath, compressionLevel, (err: string)=>{
             if (err) reject(err);
             else resolve();
         });
@@ -427,11 +474,30 @@ export async function brotliCompressFile(sourceFilePath: string, targetFilePath:
     if (!compressionLevel) compressionLevel = BROTLI_COMPRESSION_LEVEL_BEST_COMPRESSION;
 
     return new Promise<void>(function (resolve, reject) {
-        modHttp.brotliCompressFile(sourceFilePath, targetFilePath, compressionLevel, (err)=>{
+        modHttp.brotliCompressFile(sourceFilePath, targetFilePath, compressionLevel, (err: string)=>{
             if (err) reject(err);
             else resolve();
         });
     });
+}
+
+export interface FetchResult {
+    statusCode: number,
+    body?: string
+    headers?: {[key:string]: string}
+    cookies?: {[key:string]: any}
+}
+
+export async function fetch(url: string, options?: FetchOptions): Promise<FetchResult> {
+    if (!options) options = {};
+    if (!options.method) options.method = "GET";
+
+    return new Promise<FetchResult>(function (resolve, reject) {
+        modHttp.fetch(url, options!, (err: string, res: string) => {
+            if (err) reject(err);
+            else resolve(JSON.parse(res));
+        })
+    })
 }
 
 let gSecureCaller = {v: {}};
