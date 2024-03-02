@@ -580,13 +580,13 @@ func JsFetchAsync(url string, options JsFetchOptions, callback progpAPI.JsFuncti
 }
 
 // JsProxyTo allows to proxy the incoming call directly to a website.
-func JsProxyTo(resHost *progpAPI.SharedResource, requestPath string, targetPath string, options JsProxyOptions) error {
+func JsProxyTo(resHost *progpAPI.SharedResource, requestPath string, targetHostName string, options JsProxyOptions) error {
 	host, ok := resHost.Value.(*httpServer.HttpHost)
 	if !ok {
 		return errors.New("invalid resource")
 	}
 
-	mdw, err := libFastHttpImpl.BuildProxyMiddleware(targetPath, 60)
+	mdw, err := libFastHttpImpl.BuildProxyAsIsMiddleware(targetHostName, 60)
 	if err != nil {
 		return err
 	}
@@ -597,10 +597,10 @@ func JsProxyTo(resHost *progpAPI.SharedResource, requestPath string, targetPath 
 		if !strings.HasPrefix(requestPath, "/") {
 			requestPath += "/*"
 		} else {
-			requestPath += "/"
+			requestPath += "*"
 		}
 
-		mdw, err := libFastHttpImpl.BuildProxyMiddleware(targetPath, 60)
+		mdw, err := libFastHttpImpl.BuildProxyAsIsMiddleware(targetHostName, 60)
 		if err != nil {
 			return err
 		}
