@@ -48,12 +48,14 @@ interface ModHttpServer {
     requestSaveFormFile(resId: SharedResource, fieldName: string, fileId: number, saveFilePath: string, callback: Function): void;
 
     sendFile(resId: SharedResource, filePath: string): void
-    sendFileAsIs(resId: SharedResource, filePath: string, mimeType: string, contentEncoding: string, callback: Function): void
+    sendFileAsIs(resId: SharedResource, filePath: string, mimeType: string, contentEncoding: string): void
 
-    gzipCompressFile(sourceFile: string, destFile: string, compressionLevel: number): void;
-    brotliCompressFile(sourceFile: string, destFile: string, compressionLevel: number): void;
+    gzipCompressFile(sourceFile: string, destFile: string, compressionLevel: number, callback: Function): void;
+    brotliCompressFile(sourceFile: string, destFile: string, compressionLevel: number, callback: Function): void;
 
     fetch(url: string, options: FetchOptions, callback: Function): void;
+
+    proxyTo(resId: SharedResource, fromPath: string, targetUrl: string, options: ProxyTypeOptions): void
 }
 
 interface CookieOptions {
@@ -337,6 +339,25 @@ export interface FetchOptions {
      * Is useful if testing target existence or when we want to only get his headers.
      */
     skipBody?: boolean
+
+    /**
+     * Set the content type used when sending a body with the request.
+     * Isn't set when no request are set.
+     */
+    contentType?: string
+
+    /**
+     * UserAgent set the user agent used when sending a body with the request.
+     * Isn't set when no request are set.
+     */
+    userAgent?: string
+}
+
+export interface ProxyTypeOptions {
+    /**
+     * Allows to avoid including url from this path.
+     */
+    excludeSubPaths?: boolean
 }
 
 export class HttpServer {
@@ -431,6 +452,13 @@ export class HttpHost {
     POST(requestPath: string, handler: HttpRequestHandler): void {
         this.verb("POST", requestPath, handler);
     }
+
+    proxyTo(fromPath: string, targetUrl: string, options?: ProxyTypeOptions) {
+        if (!fromPath) fromPath = "/";
+        if (!options) options = {};
+
+        modHttp.proxyTo(this.hostResId, fromPath, targetUrl, options)
+    }
 }
 
 export type HttpRequestHandler = (res: HttpRequest) => Promise<void>;
@@ -454,7 +482,7 @@ export async function gzipCompressFile(sourceFilePath: string, targetFilePath: s
     if (!compressionLevel) compressionLevel = GZIP_COMPRESSION_LEVEL_BEST_COMPRESSION;
 
     return new Promise<void>(function (resolve, reject) {
-        modHttp.gzipCompressFile(sourceFilePath, targetFilePath, compressionLevel, (err: string)=>{
+        modHttp.gzipCompressFile(sourceFilePath, targetFilePath, compressionLevel!, (err: string)=>{
             if (err) reject(err);
             else resolve();
         });
@@ -474,7 +502,7 @@ export async function brotliCompressFile(sourceFilePath: string, targetFilePath:
     if (!compressionLevel) compressionLevel = BROTLI_COMPRESSION_LEVEL_BEST_COMPRESSION;
 
     return new Promise<void>(function (resolve, reject) {
-        modHttp.brotliCompressFile(sourceFilePath, targetFilePath, compressionLevel, (err: string)=>{
+        modHttp.brotliCompressFile(sourceFilePath, targetFilePath, compressionLevel!, (err: string)=>{
             if (err) reject(err);
             else resolve();
         });

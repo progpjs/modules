@@ -28,6 +28,7 @@ import (
 	"net/textproto"
 	"os"
 	"path"
+	"strings"
 	"sync"
 )
 
@@ -73,6 +74,7 @@ func registerExportedFunctions() {
 
 	group.AddFunction("sendFileAsIs", "JsSendFileAsIs", JsSendFileAsIs)
 	group.AddFunction("sendFile", "JsSendFile", JsSendFile)
+	group.AddFunction("proxyTo", "JsProxyTo", JsProxyTo)
 
 	group.AddAsyncFunction("gzipCompressFile", "JsGzipCompressFileAsync", JsGzipCompressFileAsync)
 	group.AddAsyncFunction("brotliCompressFile", "JsBrotliCompressFileAsync", JsBrotliCompressFileAsync)
@@ -524,6 +526,8 @@ func JsFetchAsync(url string, options JsFetchOptions, callback progpAPI.JsFuncti
 			SendHeaders: options.SendHeaders,
 			SendCookies: options.SendCookies,
 			SkipBody:    options.SkipBody,
+			ContentType: options.ContentType,
+			UserAgent:   options.UserAgent,
 		}
 
 		httpResult, err := libFastHttpImpl.Fetch(url, options.Method, fetchOptions)
@@ -539,7 +543,11 @@ func JsFetchAsync(url string, options JsFetchOptions, callback progpAPI.JsFuncti
 
 		if !options.SkipBody && ((jsResult.StatusCode == 200) || options.ForceReturningBody) {
 			if options.StreamBodyToFile == "" {
-				jsResult.Body = httpResult.GetBodyAsString()
+				jsResult.Body, err = httpResult.GetBodyAsString()
+				if err != nil {
+					callback.CallWithError(err)
+					return
+				}
 			} else {
 				err = httpResult.StreamBodyToFile(options.StreamBodyToFile)
 				if err != nil {
@@ -571,6 +579,38 @@ func JsFetchAsync(url string, options JsFetchOptions, callback progpAPI.JsFuncti
 	})
 }
 
+// JsProxyTo allows to proxy the incoming call directly to a website.
+func JsProxyTo(resHost *progpAPI.SharedResource, requestPath string, targetPath string, options JsProxyOptions) error {
+	host, ok := resHost.Value.(*httpServer.HttpHost)
+	if !ok {
+		return errors.New("invalid resource")
+	}
+
+	mdw, err := libFastHttpImpl.BuildProxyMiddleware(targetPath, 60)
+	if err != nil {
+		return err
+	}
+
+	host.AllVerbs(requestPath, mdw)
+
+	if !options.ExcludeSubPaths {
+		if !strings.HasPrefix(requestPath, "/") {
+			requestPath += "/*"
+		} else {
+			requestPath += "/"
+		}
+
+		mdw, err := libFastHttpImpl.BuildProxyMiddleware(targetPath, 60)
+		if err != nil {
+			return err
+		}
+
+		host.AllVerbs(requestPath, mdw)
+	}
+
+	return nil
+}
+
 type JsFetchResult struct {
 	StatusCode int                       `json:"statusCode"`
 	Body       string                    `json:"body"`
@@ -593,4 +633,16 @@ type JsFetchOptions struct {
 	// SkipBody allows to avoid requesting the body.
 	// Is useful if testing target existence or when we want to only get his headers.
 	SkipBody bool `json:"skipBody"`
+
+	// ContentType set the content type used when sending a body with the request.
+	// Isn't set when no request are set.
+	ContentType string `json:"contentType"`
+
+	// UserAgent set the user agent used when sending a body with the request.
+	// Isn't set when no request are set.
+	UserAgent string
+}
+
+type JsProxyOptions struct {
+	ExcludeSubPaths bool `json:"excludeSubPaths"`
 }
