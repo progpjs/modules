@@ -612,7 +612,7 @@ func JsServerFiles(resHost *progpAPI.SharedResource, requestPath string, dirPath
 		requestPath = "/"
 	}
 
-	mdw, err := libFastHttpImpl.BuildStaticFileServerMiddleware(requestPath, dirPath)
+	mdw, err := libFastHttpImpl.BuildStaticFileServerMiddleware(requestPath, dirPath, libFastHttpImpl.StaticFileServerOptions{})
 	if err != nil {
 		return err
 	}
