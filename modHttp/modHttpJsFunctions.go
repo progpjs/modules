@@ -625,7 +625,7 @@ func JsServerFiles(resHost *progpAPI.SharedResource, requestPath string, dirPath
 		requestPath += "*"
 	}
 
-	host.GET(requestPath+"/*", mdw)
+	host.GET(requestPath, mdw)
 	host.HEAD(requestPath, mdw)
 
 	return nil
