@@ -64,7 +64,6 @@ func registerExportedFunctions() {
 	group.AddAsyncFunction("requestSaveFormFile", "JsRequestSaveFormFileAsync", JsRequestSaveFormFileAsync)
 
 	group.AddFunction("requestWildcards", "JsRequestWildcards", JsRequestWildcards)
-	group.AddFunction("requestRemainingSegments", "JsRequestRemainingSegments", JsRequestRemainingSegments)
 
 	group.AddFunction("requestCookies", "JsRequestCookies", JsRequestCookies)
 	group.AddFunction("requestCookie", "JsRequestCookie", JsRequestCookie)
@@ -75,6 +74,7 @@ func registerExportedFunctions() {
 	group.AddFunction("sendFileAsIs", "JsSendFileAsIs", JsSendFileAsIs)
 	group.AddFunction("sendFile", "JsSendFile", JsSendFile)
 	group.AddFunction("proxyTo", "JsProxyTo", JsProxyTo)
+	group.AddFunction("serveFiles", "JsServerFiles", JsServerFiles)
 
 	group.AddAsyncFunction("gzipCompressFile", "JsGzipCompressFileAsync", JsGzipCompressFileAsync)
 	group.AddAsyncFunction("brotliCompressFile", "JsBrotliCompressFileAsync", JsBrotliCompressFileAsync)
@@ -393,15 +393,6 @@ func JsRequestWildcards(resHttpRequest *progpAPI.SharedResource) (error, []strin
 	return nil, call.GetWildcards()
 }
 
-func JsRequestRemainingSegments(resHttpRequest *progpAPI.SharedResource) (error, []string) {
-	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
-	if !ok {
-		return errors.New("invalid resource"), nil
-	}
-
-	return nil, call.GetRemainingSegment()
-}
-
 func JsRequestCookie(resHttpRequest *progpAPI.SharedResource, cookieName string) (error, map[string]any) {
 	call, ok := resHttpRequest.Value.(httpServer.HttpRequest)
 	if !ok {
@@ -611,6 +602,35 @@ func JsProxyTo(resHost *progpAPI.SharedResource, requestPath string, targetHostN
 	return nil
 }
 
+func JsServerFiles(resHost *progpAPI.SharedResource, requestPath string, dirPath string, options JsServeFilesOptions) error {
+	host, ok := resHost.Value.(*httpServer.HttpHost)
+	if !ok {
+		return errors.New("invalid resource")
+	}
+
+	if requestPath == "" {
+		requestPath = "/"
+	}
+
+	mdw, err := libFastHttpImpl.BuildStaticFileServerMiddleware(requestPath, dirPath)
+	if err != nil {
+		return err
+	}
+	host.GET(requestPath, mdw)
+	host.HEAD(requestPath, mdw)
+
+	if requestPath[len(requestPath)-1] != '/' {
+		requestPath += "/*"
+	} else {
+		requestPath += "*"
+	}
+
+	host.GET(requestPath+"/*", mdw)
+	host.HEAD(requestPath, mdw)
+
+	return nil
+}
+
 type JsFetchResult struct {
 	StatusCode int                       `json:"statusCode"`
 	Body       string                    `json:"body"`
@@ -645,4 +665,7 @@ type JsFetchOptions struct {
 
 type JsProxyOptions struct {
 	ExcludeSubPaths bool `json:"excludeSubPaths"`
+}
+
+type JsServeFilesOptions struct {
 }
