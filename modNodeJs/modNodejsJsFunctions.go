@@ -100,6 +100,8 @@ func registerExportedFunctions() {
 	modFS.AddFunction("mkdtempSync", "JsFsMkdtempSync", JsFsMkdtempSync)
 	modFS.AddAsyncFunction("mkdtempAsync", "JsFsMkdtempAsync", JsFsMkdtempAsync)
 
+	modFS.AddFunction("writeFileSyncText", "JsFsWriteFileSyncText", JsFsWriteFileSyncText)
+
 	modFS.AddFunction("readFileUtf8Sync", "JsFsReadFileUtf8Sync", JsFsReadFileUtf8Sync)
 	modFS.AddFunction("readFileBytesSync", "JsFsReadFileBytesSync", JsFsReadFileBytesSync)
 	modFS.AddFunction("renameSync", "JsFsRenameSync", JsFsRenameSync)
@@ -435,7 +437,7 @@ func JsFsAccessSync(path string, mode int) error {
 	return nil
 }
 
-func JsFsChmodAsync(path string, mode uint32, callback progpAPI.JsFunction) {
+func JsFsChmodAsync(path string, mode int, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		err := JsFsChmodSync(path, mode)
 
@@ -447,7 +449,7 @@ func JsFsChmodAsync(path string, mode uint32, callback progpAPI.JsFunction) {
 	})
 }
 
-func JsFsChmodSync(path string, mode uint32) error {
+func JsFsChmodSync(path string, mode int) error {
 	return os.Chmod(path, os.FileMode(mode))
 }
 
@@ -501,6 +503,10 @@ func JsFsTruncateSync(path string, length int64) error {
 func JsFsReadFileUtf8Sync(path string) (progpAPI.StringBuffer, error) {
 	bytes, err := os.ReadFile(path)
 	return bytes, err
+}
+
+func JsFsWriteFileSyncText(path string, data string) error {
+	return os.WriteFile(path, []byte(data), os.ModePerm)
 }
 
 func JsFsReadFileBytesSync(path string) ([]byte, error) {
@@ -594,7 +600,7 @@ func JsFsUnlinkSync(filePath string) error {
 	return os.Remove(filePath)
 }
 
-func JsFsMkdirAsync(dirPath string, recursive bool, flag uint32, callback progpAPI.JsFunction) {
+func JsFsMkdirAsync(dirPath string, recursive bool, flag int, callback progpAPI.JsFunction) {
 	progpAPI.SafeGoRoutine(func() {
 		err := JsFsMkdirSync(dirPath, recursive, flag)
 
@@ -606,7 +612,7 @@ func JsFsMkdirAsync(dirPath string, recursive bool, flag uint32, callback progpA
 	})
 }
 
-func JsFsMkdirSync(dirPath string, recursive bool, flag uint32) error {
+func JsFsMkdirSync(dirPath string, recursive bool, flag int) error {
 	flag = 0777
 
 	if recursive {
@@ -654,7 +660,8 @@ func JsFsRmSync(dirPath string, recursive bool, force bool) error {
 	return err
 }
 
-func JsFsAppendFileTexSync(filePath string, data string, mode uint32, flag int) error {
+func JsFsAppendFileTexSync(filePath string, data string, mode int, flag int) error {
+	// Note: default mode with nodejs is 0x666 which doesn't create the file if missing.
 	fs, err := os.OpenFile(filePath, flag, os.FileMode(mode))
 	if err != nil {
 		return err
@@ -666,7 +673,7 @@ func JsFsAppendFileTexSync(filePath string, data string, mode uint32, flag int) 
 	return err
 }
 
-func JsFsAppendFileBytesSync(filePath string, data []byte, mode uint32, flag int) error {
+func JsFsAppendFileBytesSync(filePath string, data []byte, mode int, flag int) error {
 	fs, err := os.OpenFile(filePath, flag, os.FileMode(mode))
 	if err != nil {
 		return err
