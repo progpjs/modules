@@ -189,7 +189,7 @@ func JsRequestURI(resHttpRequest *progpAPI.SharedResource) (error, string) {
 		return errors.New("invalid resource"), ""
 	}
 
-	return nil, call.URI()
+	return nil, call.FullURI()
 }
 
 func JsRequestPath(resHttpRequest *progpAPI.SharedResource) (error, string) {
