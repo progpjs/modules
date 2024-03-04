@@ -40,15 +40,15 @@ func registerEmbeddedModule(innerPath string, alias ...string) {
 func InstallProgpJsModule() {
 	registerExportedFunctions()
 
-	registerEmbeddedModule("jsMods/@progp/node/assert.ts", "assert", "node:assert")
-	registerEmbeddedModule("jsMods/@progp/node/test.ts", "test", "node:test")
+	registerEmbeddedModule("jsMods/@progp/nodejs/assert.ts", "assert", "node:assert")
+	registerEmbeddedModule("jsMods/@progp/nodejs/test.ts", "test", "node:test")
 
-	registerEmbeddedModule("jsMods/@progp/node/fs.ts", "fs", "node:fs")
-	registerEmbeddedModule("jsMods/@progp/node/os.ts", "os", "node:os")
-	registerEmbeddedModule("jsMods/@progp/node/path.ts", "path", "node:path")
-	registerEmbeddedModule("jsMods/@progp/node/process.ts", "process", "node:process")
-	registerEmbeddedModule("jsMods/@progp/node/stream.ts", "stream", "node:stream")
-	registerEmbeddedModule("jsMods/@progp/node/buffer.ts", "buffer", "node:buffer")
-	registerEmbeddedModule("jsMods/@progp/node/timers.ts", "timers", "node:timers")
-	registerEmbeddedModule("jsMods/@progp/node/url.ts", "url", "node:url")
+	registerEmbeddedModule("jsMods/@progp/nodejs/fs.ts", "fs", "node:fs")
+	registerEmbeddedModule("jsMods/@progp/nodejs/os.ts", "os", "node:os")
+	registerEmbeddedModule("jsMods/@progp/nodejs/path.ts", "path", "node:path")
+	registerEmbeddedModule("jsMods/@progp/nodejs/process.ts", "process", "node:process")
+	registerEmbeddedModule("jsMods/@progp/nodejs/stream.ts", "stream", "node:stream")
+	registerEmbeddedModule("jsMods/@progp/nodejs/buffer.ts", "buffer", "node:buffer")
+	registerEmbeddedModule("jsMods/@progp/nodejs/timers.ts", "timers", "node:timers")
+	registerEmbeddedModule("jsMods/@progp/nodejs/url.ts", "url", "node:url")
 }
