@@ -55,7 +55,12 @@ interface ModHttpServer {
     fetch(url: string, options: FetchOptions, callback: Function): void;
 
     proxyTo(resId: SharedResource, fromPath: string, targetHost: string, options: ProxyTypeOptions): void
-    serveFiles(resId: SharedResource, fromPath: string, dirPath: string, options: ServeFileOptions): void
+
+    fileServer_Create(resId: SharedResource, fromPath: string, dirPath: string, options: ServeFileOptions): SharedResource
+    fileServer_RemoveAll(resId: SharedResource): void
+    fileServer_RemoveUri(resId: SharedResource, uri: string, data: string): void
+    fileServer_VisitCache(resId: SharedResource, callback: Function): void
+    fileServer_OnFileNotFound(resId: SharedResource, callback: Function): void
 }
 
 interface CookieOptions {
@@ -464,7 +469,64 @@ export class HttpHost {
         if (!fromPath) fromPath = "/";
         if (!options) options = {};
 
-        modHttp.serveFiles(this.hostResId, fromPath, dirPath, options)
+        let res = modHttp.fileServer_Create(this.hostResId, fromPath, dirPath, options)
+        return new FileServer(res)
+    }
+}
+
+export interface FsCacheEntry {
+    hitCount: number
+    filePath: string
+    gzipFilePath: string
+    uri: string
+    data: string
+    fileUpdateDate: number
+    lastRequestedData: number
+    contentType: string
+    contentLength: number
+    gzipContentLength: number
+}
+
+export interface FsOnFileNodeFound {
+    filePath: string
+    uri: string
+    uriPath: string
+    queryString: string
+    data: string
+    hostName: string
+}
+
+export class FileServer {
+    private readonly resId: SharedResource
+
+    constructor(resId: SharedResource) {
+        this.resId = resId
+    }
+
+    removeAll() {
+        modHttp.fileServer_RemoveAll(this.resId)
+    }
+
+    visitCache(onCacheEntry: ((v: FsCacheEntry) => void)) {
+        modHttp.fileServer_VisitCache(this.resId, (_: string, raw: string) => {
+            onCacheEntry(JSON.parse(raw))
+        })
+    }
+
+    onFileNotFound(f: ((v: FsOnFileNodeFound, oneDone: Function) => void)) {
+        modHttp.fileServer_OnFileNotFound(this.resId, (resId: SharedResource, json: string) => {
+            f(<FsOnFileNodeFound>JSON.parse(json), () => progpReturnVoid(resId))
+        })
+    }
+
+    /**
+     * Remove the exact uri.
+     * @param uri   The uri to remove.
+     * @param data  Is used by hooks to finely select content to remove.
+     */
+    removeUri(uri: string, data?: string) {
+        if (data===undefined) data = "";
+        modHttp.fileServer_RemoveUri(this.resId, uri, data)
     }
 }
 

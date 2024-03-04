@@ -35,10 +35,20 @@ func registerExportedFunctions() {
 	group.AddAsyncFunction("progpRunScript", "JsProgpRunScriptAsync", JsProgpRunScriptAsync)
 	group.AddFunction("progpSignal", "JsProgpSignal", JsProgpSignal)
 	group.AddFunction("progpReturnString", "JsProgpReturnString", JsProgpReturnString)
+	group.AddFunction("progpReturnVoid", "JsProgpReturnVoid", JsProgpReturnVoid)
+	group.AddFunction("progpReturnError", "JsProgpReturnError", JsProgpReturnError)
+}
+
+type ProgpReturnErrorAction interface {
+	OnReturnErrorAction(err string) error
+}
+
+type ProgpReturnVoidAction interface {
+	OnReturnVoidAction() error
 }
 
 type ProgpReturnStringAction interface {
-	Return(value string) error
+	OnReturnStringAction(value string) error
 }
 
 func JsProgpSignal(rc *progpAPI.SharedResourceContainer, signal string, data string) error {
@@ -47,7 +57,23 @@ func JsProgpSignal(rc *progpAPI.SharedResourceContainer, signal string, data str
 
 func JsProgpReturnString(res *progpAPI.SharedResource, value string) error {
 	if action, ok := res.Value.(ProgpReturnStringAction); ok {
-		return action.Return(value)
+		return action.OnReturnStringAction(value)
+	}
+
+	return errors.New("invalid return call")
+}
+
+func JsProgpReturnError(res *progpAPI.SharedResource, error string) error {
+	if action, ok := res.Value.(ProgpReturnErrorAction); ok {
+		return action.OnReturnErrorAction(error)
+	}
+
+	return errors.New("invalid return call")
+}
+
+func JsProgpReturnVoid(res *progpAPI.SharedResource) error {
+	if action, ok := res.Value.(ProgpReturnVoidAction); ok {
+		return action.OnReturnVoidAction()
 	}
 
 	return errors.New("invalid return call")

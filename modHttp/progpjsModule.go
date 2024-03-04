@@ -17,6 +17,7 @@
 package modHttp
 
 func InstallProgpJsModule() {
+	registerJsFunctionCallers()
 	registerExportedFunctions()
 	registerEmbeddedModules()
 }

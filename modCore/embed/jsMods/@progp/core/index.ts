@@ -68,6 +68,16 @@ declare global {
     function progpReturnString(res: SharedResource, value: string): void;
 
     /**
+     * Allow to return a string for a shared resource implementing interface progpAPI.ProgpReturnVoidAction
+     */
+    function progpReturnVoid(res: SharedResource): void;
+
+    /**
+     * Allow to return a string for a shared resource implementing interface progpAPI.ProgpReturnErrorAction
+     */
+    function progpReturnError(res: SharedResource, error: string): void;
+
+    /**
      * Allows to send a signal to all signal listeners.
      * @param signal    The signal name
      * @param data      A simple string or a json encoded string.

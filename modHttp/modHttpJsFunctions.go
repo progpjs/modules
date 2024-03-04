@@ -74,11 +74,18 @@ func registerExportedFunctions() {
 	group.AddFunction("sendFileAsIs", "JsSendFileAsIs", JsSendFileAsIs)
 	group.AddFunction("sendFile", "JsSendFile", JsSendFile)
 	group.AddFunction("proxyTo", "JsProxyTo", JsProxyTo)
-	group.AddFunction("serveFiles", "JsServerFiles", JsServerFiles)
 
 	group.AddAsyncFunction("gzipCompressFile", "JsGzipCompressFileAsync", JsGzipCompressFileAsync)
 	group.AddAsyncFunction("brotliCompressFile", "JsBrotliCompressFileAsync", JsBrotliCompressFileAsync)
 	group.AddAsyncFunction("fetch", "JsFetchAsync", JsFetchAsync)
+
+	// >>> File server
+
+	group.AddFunction("fileServer_Create", "JsFileServerCreate", JsFileServerCreate)
+	group.AddFunction("fileServer_RemoveAll", "JsFileServerRemoveAll", JsFileServerRemoveAll)
+	group.AddFunction("fileServer_RemoveUri", "JsFileServerRemoveUri", JsFileServerRemoveUri)
+	group.AddFunction("fileServer_VisitCache", "JsFileServerVisitCache", JsFileServerVisitCache)
+	group.AddFunction("fileServer_OnFileNotFound", "JsFileServerOnFileNotFound", JsFileServerOnFileNotFound)
 }
 
 // JsConfigureServer configure a server designed by his port.
@@ -602,31 +609,109 @@ func JsProxyTo(resHost *progpAPI.SharedResource, requestPath string, targetHostN
 	return nil
 }
 
-func JsServerFiles(resHost *progpAPI.SharedResource, requestPath string, dirPath string, options JsServeFilesOptions) error {
+func JsFileServerCreate(resHost *progpAPI.SharedResource, requestPath string, dirPath string, options JsServeFilesOptions) (*progpAPI.SharedResource, error) {
 	host, ok := resHost.Value.(*httpServer.HttpHost)
 	if !ok {
-		return errors.New("invalid resource")
+		return nil, errors.New("invalid resource")
 	}
 
 	if requestPath == "" {
 		requestPath = "/"
 	}
 
-	mdw, err := libFastHttpImpl.BuildStaticFileServerMiddleware(requestPath, dirPath, libFastHttpImpl.StaticFileServerOptions{})
+	server, err := libFastHttpImpl.NewFileServer(requestPath, dirPath, libFastHttpImpl.StaticFileServerOptions{})
 	if err != nil {
-		return err
-	}
-	host.GET(requestPath, mdw)
-	host.HEAD(requestPath, mdw)
-
-	if requestPath[len(requestPath)-1] != '/' {
-		requestPath += "/*"
-	} else {
-		requestPath += "*"
+		return nil, err
 	}
 
-	host.GET(requestPath, mdw)
-	host.HEAD(requestPath, mdw)
+	server.Register(host)
+
+	return resHost.GetContainer().NewSharedResource(server, func(_ any) {
+		server.Dispose()
+	}), nil
+}
+
+func JsFileServerRemoveAll(resFS *progpAPI.SharedResource) error {
+	fs, ok := resFS.Value.(httpServer.FileServer)
+	if !ok {
+		return errors.New("invalid resource")
+	}
+
+	fs.RemoveAll()
+	return nil
+}
+
+func JsFileServerRemoveUri(resFS *progpAPI.SharedResource, uri string, data string) error {
+	fs, ok := resFS.Value.(httpServer.FileServer)
+	if !ok {
+		return errors.New("invalid resource")
+	}
+
+	return fs.RemoveExactUri(uri, data)
+}
+
+func JsFileServerVisitCache(resFS *progpAPI.SharedResource, onCacheEntry progpAPI.JsFunction) error {
+	fs, ok := resFS.Value.(httpServer.FileServer)
+	if !ok {
+		return errors.New("invalid resource")
+	}
+
+	jsEntry := make(map[string]any)
+
+	onCacheEntry.KeepAlive()
+
+	fs.VisitCache(func(entry httpServer.FileServerCacheEntry) {
+		jsEntry["hitCount"] = entry.GetHitCount()
+		jsEntry["filePath"] = entry.GetFilePath()
+		jsEntry["gzipFilePath"] = entry.GetGzipFilePath()
+		jsEntry["uri"] = entry.GetFullUri()
+		jsEntry["data"] = entry.GetData()
+
+		jsEntry["fileUpdateDate"] = entry.GetFileUpdateDate().Unix()
+		jsEntry["lastRequestedData"] = entry.GetLastRequestedDate().Unix()
+
+		jsEntry["contentType"] = entry.GetContentType()
+		jsEntry["contentLength"] = entry.GetContentLength()
+		jsEntry["gzipContentLength"] = entry.GetGzipContentLength()
+
+		asBinary, err := json.Marshal(jsEntry)
+		if err == nil {
+			onCacheEntry.CallWithStringBuffer2(asBinary)
+		}
+	})
+
+	return nil
+}
+
+func JsFileServerOnFileNotFound(resFS *progpAPI.SharedResource, callback progpAPI.JsFunction) error {
+	fs, ok := resFS.Value.(httpServer.FileServer)
+	if !ok {
+		return errors.New("invalid resource")
+	}
+
+	callback.KeepAlive()
+
+	fs.GetHooks().OnFileNotFound = func(call httpServer.HttpRequest, filePath string, data string) error {
+		info := make(map[string]any)
+
+		info["filePath"] = filePath
+		info["uri"] = call.FullURI()
+		info["uriPath"] = call.Path()
+		info["queryString"] = string(call.URI().UriQueryString())
+		info["data"] = data
+		info["hostname"] = call.GetHost().GetHostName()
+
+		b, err := json.Marshal(info)
+		if err != nil {
+			return err
+		}
+
+		lock, res := resFS.GetContainer().CreateLock()
+		gCallJsFunctionWith_SharedResource_StringBuffer.Call(callback, res, b)
+		lock.Wait()
+
+		return nil
+	}
 
 	return nil
 }
