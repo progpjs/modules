@@ -101,11 +101,15 @@ func registerExportedFunctions() {
 	modFS.AddAsyncFunction("mkdtempAsync", "JsFsMkdtempAsync", JsFsMkdtempAsync)
 
 	modFS.AddFunction("writeFileSyncText", "JsFsWriteFileSyncText", JsFsWriteFileSyncText)
+	modFS.AddAsyncFunction("writeFileSync", "JsFsWriteFileTextAsync", JsFsWriteFileTextAsync)
 
 	modFS.AddFunction("readFileUtf8Sync", "JsFsReadFileUtf8Sync", JsFsReadFileUtf8Sync)
 	modFS.AddFunction("readFileBytesSync", "JsFsReadFileBytesSync", JsFsReadFileBytesSync)
 	modFS.AddFunction("renameSync", "JsFsRenameSync", JsFsRenameSync)
+
 	modFS.AddFunction("rmSync", "JsFsRmSync", JsFsRmSync)
+	modFS.AddAsyncFunction("rmAsync", "JsFsRmAsync", JsFsRmAsync)
+
 	modFS.AddFunction("appendFileSyncText", "JsFsAppendFileTexSync", JsFsAppendFileTexSync)
 	modFS.AddFunction("appendFileSyncBytes", "JsFsAppendFileBytesSync", JsFsAppendFileBytesSync)
 	modFS.AddFunction("readlinkSync", "JsFsReadlinkSync", JsFsReadlinkSync)
@@ -509,6 +513,18 @@ func JsFsWriteFileSyncText(path string, data string) error {
 	return os.WriteFile(path, []byte(data), os.ModePerm)
 }
 
+func JsFsWriteFileTextAsync(path string, data string, callback progpAPI.JsFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		err := JsFsWriteFileSyncText(path, data)
+
+		if err == nil {
+			callback.CallWithUndefined()
+		} else {
+			callback.CallWithError(err)
+		}
+	})
+}
+
 func JsFsReadFileBytesSync(path string) ([]byte, error) {
 	bytes, err := os.ReadFile(path)
 	return bytes, err
@@ -615,11 +631,23 @@ func JsFsMkdirAsync(dirPath string, recursive bool, flag int, callback progpAPI.
 func JsFsMkdirSync(dirPath string, recursive bool, flag int) error {
 	flag = 0777
 
+	var err error
 	if recursive {
-		return os.MkdirAll(dirPath, os.FileMode(flag))
+		err = os.MkdirAll(dirPath, os.FileMode(flag))
 	} else {
-		return os.Mkdir(dirPath, os.FileMode(flag))
+		err = os.Mkdir(dirPath, os.FileMode(flag))
 	}
+
+	if err != nil {
+		msg := err.(*os.PathError).Err.Error()
+		if msg == "file exists" {
+			return nil
+		}
+
+		return err
+	}
+
+	return err
 }
 
 func JsFsMkdtempAsync(prefix string, callback progpAPI.JsFunction) {
@@ -658,6 +686,18 @@ func JsFsRmSync(dirPath string, recursive bool, force bool) error {
 	}
 
 	return err
+}
+
+func JsFsRmAsync(dirPath string, recursive bool, force bool, callback progpAPI.JsFunction) {
+	progpAPI.SafeGoRoutine(func() {
+		err := JsFsRmSync(dirPath, recursive, force)
+
+		if err == nil {
+			callback.CallWithUndefined()
+		} else {
+			callback.CallWithError(err)
+		}
+	})
 }
 
 func JsFsAppendFileTexSync(filePath string, data string, mode int, flag int) error {

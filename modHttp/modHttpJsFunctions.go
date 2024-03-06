@@ -592,7 +592,7 @@ func JsProxyTo(resHost *progpAPI.SharedResource, requestPath string, targetHostN
 	host.AllVerbs(requestPath, mdw)
 
 	if !options.ExcludeSubPaths {
-		if !strings.HasPrefix(requestPath, "/") {
+		if !strings.HasSuffix(requestPath, "/") {
 			requestPath += "/*"
 		} else {
 			requestPath += "*"
@@ -617,6 +617,10 @@ func JsFileServerCreate(resHost *progpAPI.SharedResource, requestPath string, di
 
 	if requestPath == "" {
 		requestPath = "/"
+	}
+
+	if err := os.MkdirAll(dirPath, os.ModePerm); err != nil {
+		return nil, err
 	}
 
 	server, err := libFastHttpImpl.NewFileServer(requestPath, dirPath, libFastHttpImpl.StaticFileServerOptions{})
