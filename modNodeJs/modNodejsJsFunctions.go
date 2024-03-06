@@ -210,25 +210,25 @@ func JsOsTempDir() string {
 type FsFileState struct {
 	Mode    uint16 `json:"mode"`
 	Size    int64  `json:"size"`
-	Gid     uint32 `json:"gid"`
-	Uid     uint32 `json:"uid"`
-	Dev     int32  `json:"dev"`
-	Rdev    int32  `json:"rdev"`
+	Gid     uint64 `json:"gid"`
+	Uid     uint64 `json:"uid"`
+	Dev     uint64 `json:"dev"`
+	Rdev    uint64 `json:"rdev"`
 	Ino     uint64 `json:"ino"`
-	Nlink   uint16 `json:"nlink"`
-	Blksize int32  `json:"blksize"`
-	Blocks  int64  `json:"blocks"`
+	Nlink   uint64 `json:"nlink"`
+	Blksize uint64 `json:"blksize"`
+	Blocks  uint64 `json:"blocks"`
 
-	ATimeMs int64  `json:"atimeMs"`
+	ATimeMs uint64 `json:"atimeMs"`
 	Atime   string `json:"atime"`
 
-	MTimeMs int64  `json:"mtimeMs"`
+	MTimeMs uint64 `json:"mtimeMs"`
 	Mtime   string `json:"mtime"`
 
-	CTimeMs int64  `json:"ctimeMs"`
+	CTimeMs uint64 `json:"ctimeMs"`
 	Ctime   string `json:"ctime"`
 
-	BirthtimeMs int64  `json:"birthtimeMs"`
+	BirthtimeMs uint64 `json:"birthtimeMs"`
 	Birthtime   string `json:"birthtime"`
 }
 
